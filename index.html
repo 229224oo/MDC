@@ -4,185 +4,427 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MDC 自动领取 DApp</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      background-attachment: fixed;
       min-height: 100vh;
       color: #fff;
       padding: 20px;
     }
-    .container { max-width: 500px; margin: 0 auto; }
+    .container { max-width: 600px; margin: 0 auto; }
     
+    /* 顶部装饰 */
     .header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 40px;
+      position: relative;
     }
-    .header svg { vertical-align: middle; margin-right: 12px; }
-    .header h1 { font-size: 24px; color: #00d4ff; }
     
-    .card {
-      background: rgba(30, 41, 59, 0.8);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(0, 212, 255, 0.2);
+    .header-bg {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      filter: blur(40px);
+      z-index: 0;
     }
-    .card-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #00d4ff;
-      margin-bottom: 16px;
+    
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+      border-radius: 20px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      font-size: 40px;
+      box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
+      animation: floatAnim 3s ease-in-out infinite;
+    }
+    
+    @keyframes floatAnim {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .header h1 { 
+      font-size: 32px; 
+      color: #00d4ff;
+      font-weight: 700;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #00d4ff, #0099cc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .header p {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+    
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
+    }
+    
+    .card:hover {
+      border-color: rgba(0, 212, 255, 0.3);
+      box-shadow: 0 8px 25px rgba(0, 212, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #00d4ff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .card-title i {
+      font-size: 18px;
     }
     
     .btn {
       background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-      color: #000;
+      color: #0f172a;
       border: none;
       padding: 14px 24px;
       border-radius: 10px;
       cursor: pointer;
       font-size: 16px;
-      font-weight: bold;
+      font-weight: 600;
       width: 100%;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4); }
-    .btn:disabled { background: #475569; cursor: not-allowed; color: #94a3b8; }
-    .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
-    .btn-secondary { background: rgba(71, 85, 105, 0.5); color: #fff; }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn:hover:not(:disabled)::before { left: 100%; }
+    .btn:hover:not(:disabled) { 
+      transform: translateY(-3px); 
+      box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+    }
+    .btn:active:not(:disabled) { transform: translateY(-1px); }
+    .btn:disabled { 
+      background: #475569; 
+      cursor: not-allowed; 
+      color: #94a3b8;
+      box-shadow: none;
+    }
+    
+    .btn-danger { 
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+      color: #fff; 
+    }
+    .btn-danger:hover:not(:disabled) {
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+    
+    .btn-secondary { 
+      background: rgba(71, 85, 105, 0.6); 
+      color: #cbd5e1;
+      border: 1px solid rgba(71, 85, 105, 0.8);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(71, 85, 105, 0.8);
+      box-shadow: 0 8px 25px rgba(71, 85, 105, 0.3);
+    }
     
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 16px;
       margin-bottom: 16px;
     }
+    
     .info-box {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      padding: 12px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 153, 204, 0.05) 100%);
+      border-radius: 12px;
+      padding: 16px;
       text-align: center;
+      border: 1px solid rgba(0, 212, 255, 0.1);
+      transition: all 0.3s ease;
     }
+    
+    .info-box:hover {
+      border-color: rgba(0, 212, 255, 0.3);
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 204, 0.1) 100%);
+    }
+    
     .info-box label {
       display: block;
-      font-size: 11px;
+      font-size: 12px;
       color: #94a3b8;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+    
     .info-box .value {
-      font-size: 14px;
+      font-size: 16px;
       color: #00d4ff;
-      font-family: monospace;
+      font-family: 'Courier New', monospace;
       word-break: break-all;
+      font-weight: 600;
     }
     
     .status-bar {
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
       font-size: 14px;
       text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 500;
     }
-    .status-success { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
-    .status-error { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .status-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
-    .status-info { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    
+    .status-success { 
+      background: rgba(34, 197, 94, 0.15); 
+      color: #22c55e; 
+      border: 1px solid rgba(34, 197, 94, 0.3); 
+    }
+    .status-error { 
+      background: rgba(239, 68, 68, 0.15); 
+      color: #ef4444; 
+      border: 1px solid rgba(239, 68, 68, 0.3); 
+    }
+    .status-warning { 
+      background: rgba(251, 191, 36, 0.15); 
+      color: #fbbf24; 
+      border: 1px solid rgba(251, 191, 36, 0.3); 
+    }
+    .status-info { 
+      background: rgba(59, 130, 246, 0.15); 
+      color: #3b82f6; 
+      border: 1px solid rgba(59, 130, 246, 0.3); 
+    }
     
     .auto-indicator {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 16px;
       background: rgba(34, 197, 94, 0.15);
       border: 2px solid #22c55e;
       animation: pulse 2s infinite;
     }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    
+    @keyframes pulse { 
+      0%, 100% { opacity: 1; } 
+      50% { opacity: 0.8; } 
+    }
+    
     .auto-indicator .dot {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #22c55e;
       animation: blink 1s infinite;
+      box-shadow: 0 0 8px #22c55e;
     }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .auto-indicator span { font-size: 16px; font-weight: bold; color: #22c55e; }
-    .auto-indicator .countdown { font-size: 12px; color: #94a3b8; }
+    
+    @keyframes blink { 
+      0%, 100% { opacity: 1; } 
+      50% { opacity: 0.4; } 
+    }
+    
+    .auto-indicator span { 
+      font-size: 16px; 
+      font-weight: 600; 
+      color: #22c55e; 
+    }
+    .auto-indicator .countdown { 
+      font-size: 13px; 
+      color: #94a3b8;
+      margin-left: auto;
+    }
     
     input {
       width: 100%;
       padding: 12px;
       border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.3);
       color: #fff;
       font-size: 14px;
-      font-family: monospace;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s ease;
     }
-    input:focus { outline: none; border-color: #00d4ff; }
+    
+    input:focus { 
+      outline: none; 
+      border-color: #00d4ff;
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+      background: rgba(0, 0, 0, 0.5);
+    }
+    
+    input::placeholder {
+      color: #64748b;
+    }
     
     .log-list {
       margin-top: 12px;
       max-height: 150px;
       overflow-y: auto;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      border: 1px solid rgba(0, 212, 255, 0.1);
     }
+    
+    .log-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .log-list::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+    
+    .log-list::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.3);
+      border-radius: 10px;
+    }
+    
+    .log-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 212, 255, 0.5);
+    }
+    
     .log-item {
       padding: 8px;
       border-radius: 6px;
       margin-bottom: 6px;
       font-size: 12px;
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 3px solid rgba(0, 212, 255, 0.3);
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
     }
     
     .action-row {
       display: flex;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 12px;
+      margin-top: 16px;
     }
+    
     .action-row .btn { flex: 1; margin-top: 0; }
     
     .wallet-address {
       font-size: 13px;
-      font-family: monospace;
+      font-family: 'Courier New', monospace;
       color: #94a3b8;
       text-align: center;
       margin-top: 8px;
       word-break: break-all;
     }
+    
+    /* 底部装饰 */
+    .footer-decoration {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+      pointer-events: none;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 600px) {
+      .header h1 { font-size: 24px; }
+      .header-icon { width: 60px; height: 60px; font-size: 30px; }
+      .card { padding: 16px; }
+      .info-grid { gap: 12px; }
+      .info-box { padding: 12px; }
+      .info-box label { font-size: 11px; }
+      .info-box .value { font-size: 14px; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- 顶部 -->
     <div class="header">
-      <h1>
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256">
-          <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1"/>
-            <stop offset="100%" style="stop-color:#0099cc;stop-opacity:1"/>
-          </linearGradient></defs>
-          <circle cx="128" cy="128" r="120" fill="url(#grad)" stroke="#006688" stroke-width="4"/>
-          <text x="128" y="145" font-family="Arial" font-size="72" font-weight="bold" fill="#fff" text-anchor="middle">MDC</text>
-        </svg>
-        MDC 自动领取
-      </h1>
+      <div class="header-bg"></div>
+      <div class="header-content">
+        <div class="header-icon">
+          <i class="fas fa-coins"></i>
+        </div>
+        <h1>MDC 自动领取</h1>
+        <p>智能化数字资产管理平台</p>
+      </div>
     </div>
 
+    <!-- 钱包卡片 -->
     <div class="card">
-      <div class="card-title">钱包</div>
-      <button class="btn" id="connectBtn" onclick="connectWallet()">连接钱包</button>
+      <div class="card-title">
+        <i class="fas fa-wallet"></i>
+        钱包连接
+      </div>
+      <button class="btn" id="connectBtn" onclick="connectWallet()">
+        <i class="fas fa-link"></i> 连接钱包
+      </button>
       <div id="walletArea" style="display:none;">
         <div class="info-grid">
           <div class="info-box">
             <label>账户地址</label>
-            <div class="value" id="walletAddress"></div>
+            <div class="value" id="walletAddress">-</div>
           </div>
           <div class="info-box">
             <label>BNB余额</label>
@@ -204,40 +446,69 @@
           </div>
           <div class="info-box">
             <label>安全地址</label>
-            <div class="value" id="safeAddress"></div>
+            <div class="value" id="safeAddress">-</div>
           </div>
         </div>
-        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshBalances()" style="margin-top: 12px;">刷新</button>
+        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshBalances()" style="margin-top: 12px;">
+          <i class="fas fa-sync-alt"></i> 刷新数据
+        </button>
       </div>
-      <div id="networkWarning" class="status-bar status-warning" style="display:none;">⚠️ 请切换到 BSC 网络</div>
+      <div id="networkWarning" class="status-bar status-warning" style="display:none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>请切换到 BSC 网络</span>
+      </div>
     </div>
 
+    <!-- 自动领取卡片 -->
     <div class="card">
-      <div class="card-title">自动领取</div>
+      <div class="card-title">
+        <i class="fas fa-robot"></i>
+        自动领取
+      </div>
       <div id="autoStatusArea" style="display:none;" class="auto-indicator">
         <div class="dot"></div>
         <span>运行中</span>
         <span class="countdown" id="countdown">30秒后检查</span>
       </div>
       <div class="action-row">
-        <button class="btn" id="autoBtn" onclick="toggleAuto()" disabled>启动</button>
-        <button class="btn btn-danger" id="stopBtn" onclick="stopAuto()" disabled>停止</button>
+        <button class="btn" id="autoBtn" onclick="toggleAuto()" disabled>
+          <i class="fas fa-play"></i> 启动
+        </button>
+        <button class="btn btn-danger" id="stopBtn" onclick="stopAuto()" disabled>
+          <i class="fas fa-stop"></i> 停止
+        </button>
       </div>
       <div class="log-list" id="logArea"></div>
     </div>
 
+    <!-- 操作卡片 -->
     <div class="card">
-      <div class="card-title">操作</div>
-      <button class="btn" id="approveBtn" onclick="approveRelayer()" disabled>授权代付合约</button>
-      <button class="btn btn-secondary" id="claimBtn" onclick="claimAndTransfer()" disabled>手动领取</button>
+      <div class="card-title">
+        <i class="fas fa-sliders-h"></i>
+        操作
+      </div>
+      <button class="btn" id="approveBtn" onclick="approveRelayer()" disabled>
+        <i class="fas fa-check-circle"></i> 授权代付合约
+      </button>
+      <button class="btn btn-secondary" id="claimBtn" onclick="claimAndTransfer()" disabled style="margin-top: 12px;">
+        <i class="fas fa-hand-holding-usd"></i> 手动领取
+      </button>
     </div>
 
+    <!-- 安全地址卡片 -->
     <div class="card">
-      <div class="card-title">安全地址</div>
+      <div class="card-title">
+        <i class="fas fa-lock"></i>
+        安全地址
+      </div>
       <input type="text" id="safeAddressInput" placeholder="输入安全地址">
-      <button class="btn btn-secondary" id="saveSafeBtn" onclick="saveSafeAddress()" style="margin-top: 12px;">保存地址</button>
+      <button class="btn btn-secondary" id="saveSafeBtn" onclick="saveSafeAddress()" style="margin-top: 12px;">
+        <i class="fas fa-save"></i> 保存地址
+      </button>
     </div>
   </div>
+
+  <div class="footer-decoration"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
   
@@ -349,7 +620,7 @@
         const chainId = await web3.eth.getChainId();
         const warningEl = document.getElementById('networkWarning');
         if (chainId !== CONFIG.chainId) {
-          warningEl.style.display = 'block';
+          warningEl.style.display = 'flex';
           setButtonsDisabled(true);
           showLog('请切换到BSC主网', 'warning');
           try {
@@ -374,7 +645,7 @@
     function updateWalletUI() {
       document.getElementById('walletArea').style.display = 'block';
       document.getElementById('walletAddress').textContent = currentAccount.slice(0, 6) + '...' + currentAccount.slice(-4);
-      document.getElementById('connectBtn').textContent = '已连接 ✓';
+      document.getElementById('connectBtn').innerHTML = '<i class="fas fa-check-circle"></i> 已连接';
       document.getElementById('connectBtn').disabled = true;
       web3.eth.getBalance(currentAccount).then(balance => {
         document.getElementById('bnbBalance').textContent = (Number(balance) / 1e18).toFixed(4) + ' BNB';
@@ -391,10 +662,12 @@
       const el = document.getElementById('logArea');
       const div = document.createElement('div');
       div.className = 'log-item';
-      div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-      if (type === 'success') div.style.color = '#22c55e';
-      if (type === 'error') div.style.color = '#ef4444';
-      if (type === 'warning') div.style.color = '#fbbf24';
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
+      div.textContent = `[${icon}] [${new Date().toLocaleTimeString()}] ${msg}`;
+      if (type === 'success') div.style.borderLeftColor = '#22c55e';
+      if (type === 'error') div.style.borderLeftColor = '#ef4444';
+      if (type === 'warning') div.style.borderLeftColor = '#fbbf24';
+      if (type === 'info') div.style.borderLeftColor = '#3b82f6';
       el.insertBefore(div, el.firstChild);
       while (el.children.length > 5) el.removeChild(el.lastChild);
     }
