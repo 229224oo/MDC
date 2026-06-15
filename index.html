@@ -379,6 +379,7 @@
       web3.eth.getBalance(currentAccount).then(balance => {
         document.getElementById('bnbBalance').textContent = (Number(balance) / 1e18).toFixed(4) + ' BNB';
       });
+      refreshBalances();
     }
     
     function formatAmount(wei, decimals = 18) {
