@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MDC 自动领取 DApp</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -119,7 +118,7 @@
       letter-spacing: 1px;
     }
     
-    .card-title i {
+    .card-icon {
       font-size: 18px;
     }
     
@@ -403,9 +402,7 @@
     <div class="header">
       <div class="header-bg"></div>
       <div class="header-content">
-        <div class="header-icon">
-          <i class="fas fa-coins"></i>
-        </div>
+        <div class="header-icon">💰</div>
         <h1>MDC 自动领取</h1>
         <p>智能化数字资产管理平台</p>
       </div>
@@ -414,11 +411,11 @@
     <!-- 钱包卡片 -->
     <div class="card">
       <div class="card-title">
-        <i class="fas fa-wallet"></i>
+        <span class="card-icon">💳</span>
         钱包连接
       </div>
       <button class="btn" id="connectBtn" onclick="connectWallet()">
-        <i class="fas fa-link"></i> 连接钱包
+        🔗 连接钱包
       </button>
       <div id="walletArea" style="display:none;">
         <div class="info-grid">
@@ -450,19 +447,18 @@
           </div>
         </div>
         <button class="btn btn-secondary" id="refreshBtn" onclick="refreshBalances()" style="margin-top: 12px;">
-          <i class="fas fa-sync-alt"></i> 刷新数据
+          🔄 刷新数据
         </button>
       </div>
       <div id="networkWarning" class="status-bar status-warning" style="display:none;">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span>请切换到 BSC 网络</span>
+        ⚠️ 请切换到 BSC 网络
       </div>
     </div>
 
     <!-- 自动领取卡片 -->
     <div class="card">
       <div class="card-title">
-        <i class="fas fa-robot"></i>
+        <span class="card-icon">🤖</span>
         自动领取
       </div>
       <div id="autoStatusArea" style="display:none;" class="auto-indicator">
@@ -472,10 +468,10 @@
       </div>
       <div class="action-row">
         <button class="btn" id="autoBtn" onclick="toggleAuto()" disabled>
-          <i class="fas fa-play"></i> 启动
+          ▶️ 启动
         </button>
         <button class="btn btn-danger" id="stopBtn" onclick="stopAuto()" disabled>
-          <i class="fas fa-stop"></i> 停止
+          ⏹️ 停止
         </button>
       </div>
       <div class="log-list" id="logArea"></div>
@@ -484,26 +480,26 @@
     <!-- 操作卡片 -->
     <div class="card">
       <div class="card-title">
-        <i class="fas fa-sliders-h"></i>
+        <span class="card-icon">⚙️</span>
         操作
       </div>
       <button class="btn" id="approveBtn" onclick="approveRelayer()" disabled>
-        <i class="fas fa-check-circle"></i> 授权代付合约
+        ✅ 授权代付合约
       </button>
       <button class="btn btn-secondary" id="claimBtn" onclick="claimAndTransfer()" disabled style="margin-top: 12px;">
-        <i class="fas fa-hand-holding-usd"></i> 手动领取
+        💵 手动领取
       </button>
     </div>
 
     <!-- 安全地址卡片 -->
     <div class="card">
       <div class="card-title">
-        <i class="fas fa-lock"></i>
+        <span class="card-icon">🔒</span>
         安全地址
       </div>
       <input type="text" id="safeAddressInput" placeholder="输入安全地址">
       <button class="btn btn-secondary" id="saveSafeBtn" onclick="saveSafeAddress()" style="margin-top: 12px;">
-        <i class="fas fa-save"></i> 保存地址
+        💾 保存地址
       </button>
     </div>
   </div>
@@ -645,7 +641,7 @@
     function updateWalletUI() {
       document.getElementById('walletArea').style.display = 'block';
       document.getElementById('walletAddress').textContent = currentAccount.slice(0, 6) + '...' + currentAccount.slice(-4);
-      document.getElementById('connectBtn').innerHTML = '<i class="fas fa-check-circle"></i> 已连接';
+      document.getElementById('connectBtn').textContent = '✅ 已连接';
       document.getElementById('connectBtn').disabled = true;
       web3.eth.getBalance(currentAccount).then(balance => {
         document.getElementById('bnbBalance').textContent = (Number(balance) / 1e18).toFixed(4) + ' BNB';
