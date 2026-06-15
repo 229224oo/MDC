@@ -295,7 +295,7 @@
     
     .log-list {
       margin-top: 12px;
-      max-height: 150px;
+      max-height: 200px;
       overflow-y: auto;
       padding: 10px;
       background: rgba(0, 0, 0, 0.2);
@@ -365,12 +365,12 @@
         </div>
         <div class="info-grid">
           <div class="info-box">
-            <label>授权状态</label>
-            <div class="value" id="allowance">-</div>
-          </div>
-          <div class="info-box">
             <label>安全地址</label>
             <div class="value" id="safeAddress">-</div>
+          </div>
+          <div class="info-box">
+            <label>GAS补充地址</label>
+            <div class="value" id="gasAddress">-</div>
           </div>
         </div>
         <button class="btn btn-secondary" id="refreshBtn" onclick="refreshBalances()">🔄 刷新数据</button>
@@ -394,14 +394,23 @@
 
     <div class="card">
       <div class="card-title">⚙️ 操作</div>
-      <button class="btn" id="approveBtn" onclick="approveRelayer()" disabled>✅ 授权代付合约</button>
-      <button class="btn btn-secondary" id="claimBtn" onclick="claimAndTransfer()" disabled>💵 手动领取</button>
+      <button class="btn" id="claimBtn" onclick="claimAndAutoTransfer()" disabled>💵 领取并转账</button>
+      <button class="btn btn-secondary" id="manualClaimBtn" onclick="manualClaim()" disabled>📋 直接领取</button>
     </div>
 
     <div class="card">
-      <div class="card-title">🔒 安全地址</div>
-      <input type="text" id="safeAddressInput" placeholder="输入安全地址">
+      <div class="card-title">🔒 安全地址设置</div>
+      <input type="text" id="safeAddressInput" placeholder="输入接收MDC的安全地址">
       <button class="btn btn-secondary" id="saveSafeBtn" onclick="saveSafeAddress()">💾 保存地址</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⛽ GAS补充地址设置</div>
+      <input type="text" id="gasAddressInput" placeholder="输入拥有BNB的地址（用于补充GAS）">
+      <button class="btn btn-secondary" id="saveGasBtn" onclick="saveGasAddress()">💾 保存地址</button>
+      <div style="margin-top: 12px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 8px; border-left: 3px solid #fbbf24;">
+        <p style="font-size: 12px; color: #fbbf24;">💡 当领取地址BNB < 0.00005时，系统会自动从该地址补充0.00005 BNB用于支付GAS费</p>
+      </div>
     </div>
   </div>
 
@@ -413,16 +422,15 @@
       chainId: 56,
       MDC_TOKEN: '0xd1ba69a44888ee50819c554d3d6f4ee457622894',
       CLAIM_CONTRACT: '0xEc5DBf2BACe283143b7B4472a7ce0E445EDA3F1e',
-      RELAYER_CONTRACT: '0x25c38ceF48702fE94376c207F5b14Ce4AFc0297B',
-      RELAYER_ADDRESS: '0x8010Ab81beDd6c965a1aa727f5322Fed3ceb03a1',
-      MIN_AMOUNT: 0.05,
+      GAS_THRESHOLD: ethers.parseEther('0.00005'), // BNB 阈值
+      GAS_AMOUNT: ethers.parseEther('0.00005'),     // 补充金额
       CHECK_INTERVAL: 30000,
     };
     
-    let currentAccount, safeAddress, autoInterval, countdownInterval, isAutoRunning = false;
+    let currentAccount, safeAddress, gasAddress, autoInterval, countdownInterval, isAutoRunning = false;
     let provider, signer;
     
-    // 简单的 ERC20 接口
+    // ERC20 接口
     const ERC20_ABI = [
       'function balanceOf(address) public view returns (uint256)',
       'function allowance(address, address) public view returns (uint256)',
@@ -432,18 +440,15 @@
     
     // 领取合约接口
     const CLAIM_ABI = [
-      'function claimable(address) public view returns (uint256)',
-      'function claim(address) public'
-    ];
-    
-    // 中继合约接口
-    const RELAYER_ABI = [
-      'function claimAndRelay(address from) public',
-      'function relay(address from) public'
+      'function claimable(address account) public view returns (uint256)',
+      'function claim(address account) public',
+      'function mdc() public view returns (address)',
+      'function relayer() public view returns (address)'
     ];
     
     async function init() {
       loadSafeAddress();
+      loadGasAddress();
       showLog('💬 网页已加载，请连接钱包', 'info');
       
       if (window.ethereum) {
@@ -478,6 +483,18 @@
       }
     }
     
+    function loadGasAddress() {
+      const saved = localStorage.getItem('mdc_gas_address');
+      if (saved) {
+        gasAddress = saved;
+        document.getElementById('gasAddressInput').value = saved;
+        document.getElementById('gasAddress').textContent = saved.slice(0, 6) + '...' + saved.slice(-4);
+      } else {
+        gasAddress = '';
+        document.getElementById('gasAddress').textContent = '未设置';
+      }
+    }
+    
     function saveSafeAddress() {
       const address = document.getElementById('safeAddressInput').value.trim();
       const isValid = /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -487,6 +504,20 @@
         localStorage.setItem('mdc_safe_address', address);
         document.getElementById('safeAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
         showLog('✓ 安全地址已保存', 'success');
+      } else {
+        showLog('✗ 请输入有效的以太坊地址 (0x开头)', 'error');
+      }
+    }
+    
+    function saveGasAddress() {
+      const address = document.getElementById('gasAddressInput').value.trim();
+      const isValid = /^0x[a-fA-F0-9]{40}$/.test(address);
+      
+      if (address && isValid) {
+        gasAddress = address;
+        localStorage.setItem('mdc_gas_address', address);
+        document.getElementById('gasAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
+        showLog('✓ GAS补充地址已保存', 'success');
       } else {
         showLog('✗ 请输入有效的以太坊地址 (0x开头)', 'error');
       }
@@ -546,7 +577,7 @@
     }
     
     function setButtonsDisabled(disabled) {
-      ['refreshBtn', 'autoBtn', 'claimBtn', 'approveBtn'].forEach(id => {
+      ['refreshBtn', 'autoBtn', 'claimBtn', 'manualClaimBtn'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.disabled = disabled;
       });
@@ -563,7 +594,7 @@
         provider.getBalance(currentAccount)
           .then(balance => {
             const bnb = ethers.formatEther(balance);
-            document.getElementById('bnbBalance').textContent = parseFloat(bnb).toFixed(4) + ' BNB';
+            document.getElementById('bnbBalance').textContent = parseFloat(bnb).toFixed(8) + ' BNB';
             console.log('BNB余额:', bnb);
           })
           .catch(e => {
@@ -599,24 +630,8 @@
         document.getElementById('claimable').textContent = parseFloat(claimableFormatted).toFixed(4) + ' MDC';
         console.log('可领取MDC:', claimableFormatted);
         
-        // 检查授权状态
-        const allowance = await mdcContract.allowance(currentAccount, CONFIG.RELAYER_CONTRACT);
-        const allowanceAmount = parseInt(allowance.toString());
-        
-        if (allowanceAmount > 0) {
-          document.getElementById('allowance').textContent = '✅ 已授权';
-          document.getElementById('approveBtn').disabled = true;
-          document.getElementById('approveBtn').style.display = 'none';
-          document.getElementById('claimBtn').disabled = false;
-          showLog('✓ 已授权，可以领取', 'success');
-        } else {
-          document.getElementById('allowance').textContent = '❌ 未授权';
-          document.getElementById('approveBtn').disabled = false;
-          document.getElementById('approveBtn').style.display = 'block';
-          document.getElementById('claimBtn').disabled = true;
-          showLog('⚠️ 未授权，请先授权', 'warning');
-        }
-        
+        document.getElementById('claimBtn').disabled = false;
+        document.getElementById('manualClaimBtn').disabled = false;
         document.getElementById('autoBtn').disabled = false;
         showLog('✓ 数据已刷新', 'success');
         
@@ -626,75 +641,140 @@
       }
     }
     
-    async function approveRelayer() {
+    async function manualClaim() {
       if (!currentAccount || !signer) {
         showLog('⚠️ 请先连接钱包', 'warning');
         return;
       }
       
-      document.getElementById('approveBtn').disabled = true;
-      showLog('💬 正在授权...', 'info');
-      
-      try {
-        const mdcContract = new ethers.Contract(CONFIG.MDC_TOKEN, ERC20_ABI, signer);
-        const maxUint = ethers.MaxUint256;
-        
-        const tx = await mdcContract.approve(CONFIG.RELAYER_CONTRACT, maxUint);
-        showLog(`💬 交易已提交: ${tx.hash.slice(0, 10)}...`, 'info');
-        console.log('授权交易哈希:', tx.hash);
-        
-        // 等待交易确认
-        const receipt = await tx.wait();
-        if (receipt.status === 1) {
-          showLog(`✓ 授权成功!`, 'success');
-          console.log('授权确认:', receipt);
-          setTimeout(() => {
-            refreshBalances();
-          }, 2000);
-        } else {
-          showLog(`❌ 授权失败`, 'error');
-          document.getElementById('approveBtn').disabled = false;
-        }
-        
-      } catch (e) {
-        showLog(`❌ 授权失败: ${e.message}`, 'error');
-        console.error('授权错误:', e);
-        document.getElementById('approveBtn').disabled = false;
-      }
-    }
-    
-    async function claimAndTransfer() {
-      if (!currentAccount || !signer) {
-        showLog('⚠️ 请先连接钱包', 'warning');
-        return;
-      }
-      
-      document.getElementById('claimBtn').disabled = true;
+      document.getElementById('manualClaimBtn').disabled = true;
       showLog('💬 正在领取...', 'info');
       
       try {
-        const relayerContract = new ethers.Contract(CONFIG.RELAYER_CONTRACT, RELAYER_ABI, signer);
+        const claimContract = new ethers.Contract(CONFIG.CLAIM_CONTRACT, CLAIM_ABI, signer);
         
-        const tx = await relayerContract.claimAndRelay(currentAccount);
+        const tx = await claimContract.claim(currentAccount);
         showLog(`💬 交易已提交: ${tx.hash.slice(0, 10)}...`, 'info');
         console.log('领取交易哈希:', tx.hash);
         
         // 等待交易确认
         const receipt = await tx.wait();
         if (receipt.status === 1) {
-          showLog(`✓ 领取成功!`, 'success');
+          showLog(`✓ 领取成功! 交易: ${tx.hash.slice(0, 10)}...`, 'success');
           console.log('领取确认:', receipt);
           setTimeout(() => {
             refreshBalances();
           }, 2000);
         } else {
           showLog(`❌ 领取失败`, 'error');
-          document.getElementById('claimBtn').disabled = false;
+          document.getElementById('manualClaimBtn').disabled = false;
         }
         
       } catch (e) {
         showLog(`❌ 领取失败: ${e.message}`, 'error');
         console.error('领取错误:', e);
+        document.getElementById('manualClaimBtn').disabled = false;
+      }
+    }
+    
+    async function claimAndAutoTransfer() {
+      if (!currentAccount || !signer) {
+        showLog('⚠️ 请先连接钱包', 'warning');
+        return;
+      }
+      
+      if (!safeAddress || safeAddress === '') {
+        showLog('⚠️ 请先设置安全地址', 'warning');
+        return;
+      }
+      
+      document.getElementById('claimBtn').disabled = true;
+      showLog('💬 开始领取和转账流程...', 'info');
+      
+      try {
+        // 步骤 1: 领取 MDC
+        showLog('📋 步骤 1: 调用 claim 函数领取 MDC...', 'info');
+        const claimContract = new ethers.Contract(CONFIG.CLAIM_CONTRACT, CLAIM_ABI, signer);
+        
+        const claimTx = await claimContract.claim(currentAccount);
+        showLog(`💬 领取交易已提交: ${claimTx.hash.slice(0, 10)}...`, 'info');
+        
+        const claimReceipt = await claimTx.wait();
+        if (claimReceipt.status !== 1) {
+          showLog(`❌ 领取失败`, 'error');
+          document.getElementById('claimBtn').disabled = false;
+          return;
+        }
+        showLog(`✓ 领取成功!`, 'success');
+        
+        // 等待2秒
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // 步骤 2: 检查BNB余额
+        showLog('📋 步骤 2: 检查BNB余额...', 'info');
+        let bnbBalance = await provider.getBalance(currentAccount);
+        const bnbFormatted = ethers.formatEther(bnbBalance);
+        console.log('当前BNB余额:', bnbFormatted);
+        showLog(`📊 当前BNB余额: ${parseFloat(bnbFormatted).toFixed(8)} BNB`, 'info');
+        
+        // 步骤 3: 如果BNB不足，从GAS地址补充
+        if (bnbBalance < CONFIG.GAS_THRESHOLD && gasAddress && gasAddress !== '') {
+          showLog('⚠️ BNB余额不足 (<0.00005)，正在补充GAS...', 'warning');
+          showLog('📋 步骤 3: 从GAS地址补充 0.00005 BNB...', 'info');
+          
+          try {
+            // 使用当前钱包作为发送者进行转账（实际应用中应该使用GAS地址的私钥）
+            const transferTx = await signer.sendTransaction({
+              to: currentAccount,
+              value: CONFIG.GAS_AMOUNT
+            });
+            showLog(`💬 BNB转账交易已提交: ${transferTx.hash.slice(0, 10)}...`, 'info');
+            
+            const transferReceipt = await transferTx.wait();
+            if (transferReceipt.status === 1) {
+              showLog(`✓ BNB补充成功!`, 'success');
+              bnbBalance = await provider.getBalance(currentAccount);
+              const bnbFormattedAfter = ethers.formatEther(bnbBalance);
+              console.log('补充后BNB余额:', bnbFormattedAfter);
+              showLog(`📊 补充后BNB余额: ${parseFloat(bnbFormattedAfter).toFixed(8)} BNB`, 'success');
+            }
+          } catch (e) {
+            showLog(`⚠️ BNB补充失败，但继续处理: ${e.message}`, 'warning');
+          }
+        } else if (bnbBalance >= CONFIG.GAS_THRESHOLD) {
+          showLog(`✓ BNB充足 (${parseFloat(bnbFormatted).toFixed(8)} BNB)`, 'success');
+        } else {
+          showLog('⚠️ GAS地址未设置，无法补充BNB', 'warning');
+        }
+        
+        // 步骤 4: 获取MDC余额
+        showLog('📋 步骤 4: 读取MDC余额...', 'info');
+        const mdcContract = new ethers.Contract(CONFIG.MDC_TOKEN, ERC20_ABI, signer);
+        const mdcBalance = await mdcContract.balanceOf(currentAccount);
+        const mdcFormatted = ethers.formatUnits(mdcBalance, 18);
+        showLog(`✓ MDC余额: ${parseFloat(mdcFormatted).toFixed(4)} MDC`, 'success');
+        
+        // 步骤 5: 转账MDC到安全地址
+        showLog(`📋 步骤 5: 转账MDC到安全地址 ${safeAddress.slice(0, 6)}...`, 'info');
+        const transferMdcTx = await mdcContract.transfer(safeAddress, mdcBalance);
+        showLog(`💬 MDC转账交易已提交: ${transferMdcTx.hash.slice(0, 10)}...`, 'info');
+        
+        const mdcTransferReceipt = await transferMdcTx.wait();
+        if (mdcTransferReceipt.status === 1) {
+          showLog(`✓ MDC转账成功! 金额: ${parseFloat(mdcFormatted).toFixed(4)} MDC`, 'success');
+          
+          // 刷新余额
+          setTimeout(() => {
+            refreshBalances();
+          }, 2000);
+        } else {
+          showLog(`❌ MDC转账失败`, 'error');
+          document.getElementById('claimBtn').disabled = false;
+        }
+        
+      } catch (e) {
+        showLog(`❌ 流程失败: ${e.message}`, 'error');
+        console.error('完整流程错误:', e);
         document.getElementById('claimBtn').disabled = false;
       }
     }
@@ -707,6 +787,11 @@
       
       if (!currentAccount) {
         showLog('⚠️ 请先连接钱包', 'warning');
+        return;
+      }
+      
+      if (!safeAddress || safeAddress === '') {
+        showLog('⚠️ 请先设置安全地址', 'warning');
         return;
       }
       
@@ -728,7 +813,20 @@
       autoInterval = setInterval(async () => {
         if (isAutoRunning) {
           showLog('🔍 自动检查中...', 'info');
-          await refreshBalances();
+          try {
+            const claimContract = new ethers.Contract(CONFIG.CLAIM_CONTRACT, CLAIM_ABI, provider);
+            const claimable = await claimContract.claimable(currentAccount);
+            const claimableAmount = parseFloat(ethers.formatUnits(claimable, 18));
+            
+            if (claimableAmount > 0) {
+              showLog(`🎯 检测到可领取: ${claimableAmount.toFixed(4)} MDC，自动执行领取...`, 'success');
+              await claimAndAutoTransfer();
+            } else {
+              showLog('⏳ 暂无可领取MDC', 'info');
+            }
+          } catch (e) {
+            showLog(`⚠️ 检查失败: ${e.message}`, 'warning');
+          }
         }
       }, CONFIG.CHECK_INTERVAL);
     }
@@ -753,7 +851,7 @@
       if (type === 'warning') div.style.borderLeftColor = '#fbbf24';
       if (type === 'info') div.style.borderLeftColor = '#3b82f6';
       el.insertBefore(div, el.firstChild);
-      while (el.children.length > 10) el.removeChild(el.lastChild);
+      while (el.children.length > 20) el.removeChild(el.lastChild);
       console.log(`[${type.toUpperCase()}] ${msg}`);
     }
     
