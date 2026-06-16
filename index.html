@@ -177,7 +177,8 @@
   <div class="container">
     <div class="header">
       <h1>MDC 收益辅助系统</h1>
-      <div class="subtitle">您的专属 Web3 管理系统</div>
+      <div class="subtitle" id="headerStatus">您的专属 Web3 管理系统</div>
+      <div class="wallet-address" id="headerWallet" style="display:none; margin-top:8px; font-size:10px;"></div>
     </div>
 
     <div class="page active" id="page-home">
@@ -349,13 +350,9 @@
     <div class="page" id="page-team">
       <div class="card">
         <div class="card-title">🔗 推荐信息</div>
-        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-          <button class="btn btn-primary" onclick="copyRefLink()">📤 分享链接</button>
-          <button class="btn btn-secondary">📱 二维码</button>
-        </div>
         <div class="referral-row">
           <input type="text" id="refLink" readonly value="">
-          <button class="btn-copy" onclick="copyRefLink()">📋</button>
+          <button class="btn-copy" onclick="copyRefLink()">复制链接</button>
         </div>
         <div class="info-grid" style="margin-top: 12px;">
           <div class="info-box">
@@ -417,12 +414,12 @@
       <div class="card">
         <div class="card-title">📋 流水账单</div>
         <div class="bill-tabs">
-          <div class="bill-tab active">全部</div>
-          <div class="bill-tab">受赠</div>
-          <div class="bill-tab">直赠</div>
-          <div class="bill-tab">商队</div>
-          <div class="bill-tab">勋章</div>
-          <div class="bill-tab">榜单</div>
+          <div class="bill-tab active" onclick="selectBillTab('全部')">全部</div>
+          <div class="bill-tab" onclick="selectBillTab('受赠')">受赠</div>
+          <div class="bill-tab" onclick="selectBillTab('直赠')">直赠</div>
+          <div class="bill-tab" onclick="selectBillTab('商队')">商队</div>
+          <div class="bill-tab" onclick="selectBillTab('勋章')">勋章</div>
+          <div class="bill-tab" onclick="selectBillTab('榜单')">榜单</div>
         </div>
         <div class="empty-state">暂无流水</div>
       </div>
@@ -430,9 +427,9 @@
       <div class="card">
         <div class="card-title">📤 提现记录</div>
         <div class="bill-tabs">
-          <div class="bill-tab active">处理中</div>
-          <div class="bill-tab">已完成</div>
-          <div class="bill-tab">已拒绝</div>
+          <div class="bill-tab active" onclick="selectWithdrawTab('处理中')">处理中</div>
+          <div class="bill-tab" onclick="selectWithdrawTab('已完成')">已完成</div>
+          <div class="bill-tab" onclick="selectWithdrawTab('已拒绝')">已拒绝</div>
         </div>
         <div class="empty-state">暂无提现记录</div>
       </div>
@@ -623,12 +620,19 @@
     async function loadReferralInfo() {
       if (!currentAccount) return;
       const refUrl = CONFIG.REF_URL + currentAccount.toLowerCase();
-      document.getElementById('refLink').value = refUrl;
-      document.getElementById('myAddress').textContent = currentAccount.toLowerCase();
       
+      // 更新推荐链接
+      const refLinkEl = document.getElementById('refLink');
+      if (refLinkEl) refLinkEl.value = refUrl;
+      
+      // 更新我的地址（缩短显示）
+      const myAddrEl = document.getElementById('myAddress');
+      if (myAddrEl) myAddrEl.textContent = currentAccount.slice(0, 8) + '...' + currentAccount.slice(-6);
+      
+      // 从API获取上级地址
       if (userInfo && userInfo.pdaddress) {
         const pdAddrEl = document.getElementById('parentAddress');
-        if (pdAddrEl) pdAddrEl.textContent = userInfo.pdaddress;
+        if (pdAddrEl) pdAddrEl.textContent = userInfo.pdaddress.slice(0, 8) + '...' + userInfo.pdaddress.slice(-6);
       }
     }
     
@@ -656,14 +660,14 @@
         
         if (withdrawAmount <= 0) { showLog('提现数量不足', 'error'); return; }
         
-        const message = `Withdraw ${withdrawAmount} MDC from DAO`;
+        // 签名消息用于验证身份
+        const message = `Withdraw ${withdrawAmount} MDC`;
         const signature = await web3.eth.personal.sign(message, currentAccount);
         
         const response = await fetch(CONFIG.API_BASE + '/app/withdrawRecord/addWithdrawRecord', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            address: currentAccount.toLowerCase(),
             amount: withdrawAmount,
             signature: signature
           })
@@ -671,7 +675,7 @@
         
         const result = await response.json();
         if (result.success) {
-          showLog('提现申请成功 ✓（已扣除5%手续费，等待审核）', 'success');
+          showLog('提现申请成功 ✓（已扣除5%手续费）', 'success');
         } else {
           showLog('提现失败: ' + (result.message || '未知错误'), 'error');
         }
@@ -714,9 +718,14 @@
       if (currentAccount) {
         document.getElementById('statusWallet').className = 'status success';
         document.getElementById('statusWallet').textContent = '✅ 已连接';
+        document.getElementById('headerStatus').textContent = '✅ 已连接钱包';
+        document.getElementById('headerWallet').style.display = 'block';
+        document.getElementById('headerWallet').textContent = currentAccount.slice(0, 10) + '...' + currentAccount.slice(-8);
       } else {
         document.getElementById('statusWallet').className = 'status error';
         document.getElementById('statusWallet').textContent = '❌ 未连接';
+        document.getElementById('headerStatus').textContent = '您的专属 Web3 管理系统';
+        document.getElementById('headerWallet').style.display = 'none';
       }
     }
     
@@ -731,7 +740,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: currentAccount.toLowerCase() })
-          }).then(r => r.json())
+          }).then(r => r.json()).catch(() => ({ data: null }))
         ]);
         
         const walletBal = Number(walletBalance) / 1e18;
@@ -739,28 +748,65 @@
         
         if (apiResponse && apiResponse.data) {
           userInfo = apiResponse.data;
-          const withdrawable = apiResponse.data.income || apiResponse.data.totalMdc || 0;
+          // 使用API返回的可提现余额，如果没有则使用DAO合约余额
+          const withdrawable = apiResponse.data.income || apiResponse.data.totalMdc || daoBal;
           document.getElementById('withdrawBalance').textContent = withdrawable.toFixed(4);
           document.getElementById('netAmount').textContent = (withdrawable * 0.95).toFixed(4) + ' MDC';
           
+          // 更新上级地址
           if (apiResponse.data.pdaddress) {
             const pdAddrEl = document.getElementById('parentAddress');
             if (pdAddrEl) pdAddrEl.textContent = apiResponse.data.pdaddress;
           }
           
+          // 更新资产金额
           if (apiResponse.data.assets && apiResponse.data.assets.amount) {
             const assetAmt = document.getElementById('assetAmount');
             if (assetAmt) assetAmt.textContent = apiResponse.data.assets.amount.toFixed(4) + ' MDC';
           }
+          
+          // 更新商队数据
+          if (apiResponse.data.team) {
+            const teamInfo = apiResponse.data.team;
+            const currentCountEl = document.querySelector('.info-box:has(> label:contains("当前数量")) .value');
+            if (teamInfo.currentCount !== undefined) {
+              document.querySelectorAll('.info-box label').forEach((label, idx) => {
+                if (label.textContent === '当前数量') {
+                  label.parentElement.querySelector('.value').textContent = teamInfo.currentCount;
+                }
+              });
+            }
+          }
         } else {
+          // 如果API失败，使用链上数据
           document.getElementById('withdrawBalance').textContent = daoBal.toFixed(4);
           document.getElementById('netAmount').textContent = (daoBal * 0.95).toFixed(4) + ' MDC';
         }
         
         document.getElementById('donateBalance').textContent = walletBal.toFixed(4) + ' MDC';
+        
+        // 更新MDC实时价格和捐赠金额
+        updateDonatePrices();
       } catch (e) {
         showLog('刷新失败: ' + e.message, 'error');
       }
+    }
+    
+    function updateDonatePrices() {
+      const mdcPrice = 2.787; // 可以从API获取
+      const tiers = [
+        { name: 'Base', usd: 100 },
+        { name: 'Conservative', usd: 300 },
+        { name: 'Balanced', usd: 1000 },
+        { name: 'Elite', usd: 3000 }
+      ];
+      
+      document.querySelectorAll('.donate-item').forEach((item, idx) => {
+        if (tiers[idx]) {
+          const mdcAmount = (tiers[idx].usd / mdcPrice).toFixed(2);
+          item.querySelector('.price').textContent = mdcAmount + ' MDC';
+        }
+      });
     }
     
     function showLog(msg, type) {
@@ -847,8 +893,39 @@
       showLog('自动领取已停止', 'info');
     }
     
+    function selectBillTab(tab, type) {
+      document.querySelectorAll('.bill-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      showLog('加载' + tab + '记录...', 'info');
+    }
+    
+    function selectWithdrawTab(tab) {
+      document.querySelectorAll('.bill-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      showLog('加载提现记录: ' + tab, 'info');
+    }
+    
     function confirmDonate() {
-      if (!currentAccount) { showLog('请先连接钱包', 'error'); return; }
+      if (!currentAccount) { 
+        showLog('请先连接钱包', 'error'); 
+        return; 
+      }
+      
+      const walletBal = parseFloat(document.getElementById('donateBalance').textContent) || 0;
+      const selectedTier = document.querySelector('.donate-item.active');
+      if (!selectedTier) {
+        showLog('请先选择捐赠档位', 'error');
+        return;
+      }
+      
+      const priceText = selectedTier.querySelector('.price').textContent;
+      const requiredAmount = parseFloat(priceText);
+      
+      if (walletBal < requiredAmount) {
+        showLog('余额不足，当前余额: ' + walletBal.toFixed(4) + ' MDC', 'error');
+        return;
+      }
+      
       showLog('捐赠功能开发中...', 'info');
     }
     
