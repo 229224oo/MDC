@@ -144,6 +144,16 @@
     
     .warning-bar { background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; margin-top: 8px; }
     .tip { font-size: 11px; color: #64748b; padding: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; }
+    
+    .referral-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-top: 8px; }
+    .referral-box label { display: block; font-size: 10px; color: #64748b; margin-bottom: 5px; }
+    .referral-row { display: flex; gap: 8px; }
+    .referral-row input { flex: 1; margin-top: 0; }
+    .btn-copy { padding: 10px 15px; background: #8b5cf6; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 12px; white-space: nowrap; }
+    .btn-copy:hover { background: #7c3aed; }
+    
+    .btn-warning { background: #f59e0b; }
+    .btn-warning:hover { background: #d97706; }
   </style>
 </head>
 <body>
@@ -176,18 +186,53 @@
     </div>
 
     <div class="card">
+      <div class="card-title">💰 市场信息</div>
+      <div class="info-grid">
+        <div class="info-box"><label>MDC 价格</label><div class="value" id="mdcPrice">$--</div></div>
+        <div class="info-box"><label>协议储备</label><div class="value" id="protocolReserve">-</div></div>
+      </div>
+      <div class="info-grid">
+        <div class="info-box"><label>⏱️ 结算倒计时</label><div class="value" id="countdown">--:--:--</div></div>
+        <div class="info-box"><label>Gas价格</label><div class="value" id="gasPrice">-</div></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">👤 我的信息</div>
+      <div class="info-grid">
+        <div class="info-box"><label>我的分层</label><div class="value" id="myTier">-</div></div>
+        <div class="info-box"><label>今日份额</label><div class="value" id="myShare">-</div></div>
+      </div>
+      <div class="info-grid">
+        <div class="info-box"><label>今日分发</label><div class="value" id="todayDist">-</div></div>
+        <div class="info-box"><label>累计分发</label><div class="value" id="totalDist">-</div></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">🔗 推荐信息</div>
+      <div class="info-grid">
+        <div class="info-box"><label>🔒 安全地址</label><div class="value" id="safeAddress">0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA</div></div>
+        <div class="info-box"><label>上级地址</label><div class="value" id="referrer">-</div></div>
+      </div>
+      <div class="referral-box">
+        <label>推荐链接</label>
+        <div class="referral-row">
+          <input type="text" id="refLink" readonly value="">
+          <button class="btn-copy" onclick="copyRefLink()">📋 复制</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
       <div class="card-title">📊 余额信息</div>
       <div class="info-grid">
         <div class="info-box"><label>可领取 MDC</label><div class="value" id="claimable">-</div></div>
         <div class="info-box"><label>MDC 余额</label><div class="value" id="balance">-</div></div>
       </div>
-      <div class="info-grid">
-        <div class="info-box"><label>🔒 安全地址</label><div class="value" id="safeAddress">0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA</div></div>
-        <div class="info-box"><label>Gas价格</label><div class="value" id="gasPrice">-</div></div>
-      </div>
       <button class="btn btn-secondary" onclick="refreshBalances()" style="margin-top: 10px;">🔄 刷新链上数据</button>
     </div>
-
+    
     <div class="card">
       <div class="card-title">📋 功能状态</div>
       <div class="status-table">
@@ -205,15 +250,18 @@
         </div>
       </div>
     </div>
-
+    
     <div class="card">
       <div class="card-title">⚡ 操作</div>
       <div id="autoStatusArea" style="display:none;" class="auto-indicator">
         <div class="dot"></div><span>自动领取运行中</span>
       </div>
       <div class="action-row">
-        <button class="btn btn-success" id="claimBtn" onclick="claimAndTransfer()">Claim合约领取MDC</button>
+        <button class="btn btn-success" id="claimBtn" onclick="claimAndTransfer()">Claim合约领取</button>
         <button class="btn btn-secondary" id="transferBtn" onclick="transferAll()">转账全部</button>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-warning" onclick="withdrawDAO()">📤 DAO提现(无需Gas)</button>
       </div>
       <div class="action-row">
         <button class="btn" id="autoBtn" onclick="toggleAuto()">启动自动</button>
@@ -229,6 +277,7 @@
       chainId: 56,
       MDC_TOKEN: '0xd1ba69a44888ee50819c554d3d6f4ee457622894',
       CLAIM_CONTRACT: '0xEc5DBf2BACe283143b7B4472a7ce0E445EDA3F1e',
+      DAO_CONTRACT: '0x79a558960C2Ee79B22F6Ecc343462A4C7d126E11',
       MIN_AMOUNT: 0.05,
       CHECK_INTERVAL: 30000,
     };
@@ -243,6 +292,13 @@
     const CLAIM_ABI = [
       { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "claimable", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" },
       { "constant": false, "inputs": [{ "name": "account", "type": "address" }], "name": "claim", "outputs": [], "type": "function" }
+    ];
+    
+    const DAO_ABI = [
+      { "constant": false, "inputs": [], "name": "withdraw", "outputs": [], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "user", "type": "address" }], "name": "referrer", "outputs": [{ "name": "", "type": "address" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "user", "type": "address" }], "name": "getUserInfo", "outputs": [{ "components": [{ "name": "id", "type": "uint256" }, { "name": "referrer", "type": "address" }, { "name": "team", "type": "uint256" }], "name": "", "type": "tuple" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "getMDCBalance", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }
     ];
     
     let web3, currentAccount, safeAddress = '0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA', autoInterval, isAutoRunning = false;
@@ -268,6 +324,86 @@
           await refreshBalances();
         }
       } catch (e) {}
+      startCountdown();
+      fetchMarketInfo();
+    }
+    
+    function startCountdown() {
+      function update() {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const diff = tomorrow - now;
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        document.getElementById('countdown').textContent = 
+          String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      }
+      update();
+      setInterval(update, 1000);
+    }
+    
+    async function fetchMarketInfo() {
+      try {
+        const daoContract = new web3.eth.Contract(DAO_ABI, CONFIG.DAO_CONTRACT);
+        const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
+        const [mdcBalance] = await Promise.all([
+          daoContract.methods.getMDCBalance().call().catch(() => '0')
+        ]);
+        document.getElementById('protocolReserve').textContent = (Number(mdcBalance) / 1e18).toFixed(2) + ' MDC';
+        document.getElementById('mdcPrice').textContent = '$2.787';
+      } catch (e) {
+        console.log('市场信息获取失败');
+      }
+    }
+    
+    async function loadReferralInfo() {
+      if (!currentAccount) return;
+      try {
+        const daoContract = new web3.eth.Contract(DAO_ABI, CONFIG.DAO_CONTRACT);
+        const referrer = await daoContract.methods.referrer(currentAccount).call().catch(() => null);
+        if (referrer && referrer !== '0x0000000000000000000000000000000000000000') {
+          document.getElementById('referrer').textContent = referrer.slice(0, 6) + '...' + referrer.slice(-4);
+        } else {
+          document.getElementById('referrer').textContent = '无上级';
+        }
+        document.getElementById('refLink').value = 'https://dao.mdcdefi.com/?ref=' + currentAccount;
+        document.getElementById('myTier').textContent = '待激活';
+        document.getElementById('myShare').textContent = '-';
+        document.getElementById('todayDist').textContent = '-';
+        document.getElementById('totalDist').textContent = '-';
+      } catch (e) {
+        console.log('推荐信息获取失败');
+      }
+    }
+    
+    function copyRefLink() {
+      const link = document.getElementById('refLink').value;
+      if (link) {
+        navigator.clipboard.writeText(link).then(() => {
+          showLog('推荐链接已复制 ✓', 'success');
+        }).catch(() => {
+          showLog('复制失败', 'error');
+        });
+      }
+    }
+    
+    async function withdrawDAO() {
+      if (!currentAccount) {
+        showLog('请先连接钱包', 'error');
+        return;
+      }
+      try {
+        showLog('正在发起DAO提现...', 'info');
+        const daoContract = new web3.eth.Contract(DAO_ABI, CONFIG.DAO_CONTRACT);
+        await daoContract.methods.withdraw().send({ from: currentAccount });
+        showLog('DAO提现成功 ✓', 'success');
+        await refreshBalances();
+      } catch (e) {
+        showLog('DAO提现失败', 'error');
+      }
     }
     
     async function connectWallet() {
@@ -281,6 +417,7 @@
         updateWalletUI();
         await checkNetwork();
         await refreshBalances();
+        await loadReferralInfo();
       } catch (e) {
         showLog('连接失败', 'error');
       }
